@@ -2,7 +2,24 @@ import type { ProvedorCatalogo } from "../../catalogo/catalogo.port.ts";
 import type { ReadingStatus } from "../../generated/prisma/enums.ts";
 import type { Tradutor } from "../../traducao/traducao.port.ts";
 import type { LivrosRepository } from "./livros.repository.ts";
-import type { LivroNaEstante } from "./livros.types.ts";
+import type { LivroNaEstante, PaginaEstante } from "./livros.types.ts";
+import { dadosDaAba, periodoDoMes, type AbaEstante } from "./livros.estante.ts";
+
+const LIVROS_POR_PAGINA_ESTANTE = 12;
+
+type UserBookComLivro = Awaited<ReturnType<LivrosRepository["findUserBooksByStatus"]>>[number];
+
+function paraLivroNaEstante({ id, book }: UserBookComLivro): LivroNaEstante {
+  return {
+    id,
+    externalId: book.external_id,
+    titulo: book.title,
+    autor: book.author,
+    ano: book.published_at,
+    genero: book.genre,
+    capaUrl: book.cover_url,
+  };
+}
 
 type DatasLeitura = {
   startedAt?: Date;
@@ -61,14 +78,19 @@ export class LivrosService {
 
   async listarEstante(userId: string, status: ReadingStatus): Promise<LivroNaEstante[]> {
     const itens = await this.repository.findUserBooksByStatus(userId, status);
-    return itens.map(({ id, book }) => ({
-      id,
-      externalId: book.external_id,
-      titulo: book.title,
-      autor: book.author,
-      genero: book.genre,
-      capaUrl: book.cover_url,
-    }));
+    return itens.map(paraLivroNaEstante);
+  }
+
+  async listarEstantePaginada(userId: string, aba: AbaEstante, pagina = 1, hoje = new Date()): Promise<PaginaEstante> {
+    const { status, somenteEsteMes } = dadosDaAba(aba);
+    const paginaValida = Math.max(1, Math.floor(pagina));
+    const { itens, total } = await this.repository.findUserBooksPage(
+      userId,
+      { status, terminadosEm: somenteEsteMes ? periodoDoMes(hoje) : undefined },
+      (paginaValida - 1) * LIVROS_POR_PAGINA_ESTANTE,
+      LIVROS_POR_PAGINA_ESTANTE,
+    );
+    return { livros: itens.map(paraLivroNaEstante), total, pagina: paginaValida, porPagina: LIVROS_POR_PAGINA_ESTANTE };
   }
 
   private async obterOuSalvarLivro(externalId: string, idioma?: string) {

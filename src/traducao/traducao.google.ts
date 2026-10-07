@@ -38,7 +38,6 @@ async function traduzirTexto(texto: string, idioma: string): Promise<string> {
     guardarNoCache(chave, traduzido)
     return traduzido
   } catch {
-    // sem tradução o livro continua utilizável, só aparece no idioma original
     return texto
   }
 }

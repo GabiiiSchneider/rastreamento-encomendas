@@ -1,21 +1,23 @@
 import { useState } from "react";
 import { createFileRoute, notFound, useNavigate, useRouter } from "@tanstack/react-router";
-import { Alert, Box, Chip, Paper, Snackbar, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Chip, Link, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { PaginaComCard } from "../../components/PaginaComCard";
 import { BotaoRetro } from "../../components/BotaoRetro";
 import { LinkRouter } from "../../components/LinkRouter";
+import { AvisoRetro, type Aviso } from "../../components/AvisoRetro";
 import { cores, fontes, retro } from "../../lib/tema";
 import type { ReadingStatus } from "../../generated/prisma/enums";
 import type { DetalhesLivroCatalogo } from "../../catalogo/catalogo.port";
 import { adicionarNaEstante, obterLivro, obterStatusNaEstante } from "../../features/livros/livros.functions";
-import { validarBuscaLivros, type BuscaLivros } from "../../features/livros/livros.busca";
+import { validarBuscaLivro, type BuscaLivro } from "../../features/livros/livros.busca";
 import { paraExternalId } from "../../features/livros/livros.ids";
 import { OPCOES_STATUS, rotuloDoStatus } from "../../features/livros/livros.status";
 import { estiloDoLivro, indiceDoId } from "../../features/livros/components/estilosCapa";
 import { MensagemEstado } from "../../features/livros/components/MensagemEstado";
+import { ID_SECAO_AUTOR, SobreAutor } from "../../features/autores/components/SobreAutor";
 
 export const Route = createFileRoute("/livros/$livroId")({
-  validateSearch: validarBuscaLivros,
+  validateSearch: validarBuscaLivro,
   loader: async ({ params }) => {
     const [livro, statusAtual] = await Promise.all([
       obterLivro({ data: { livroId: params.livroId } }),
@@ -32,8 +34,6 @@ export const Route = createFileRoute("/livros/$livroId")({
 
 const ESPERA_ANTES_DE_SAIR_MS = 1200;
 
-type Aviso = { tipo: "success" | "error"; mensagem: string };
-
 function LivroPage() {
   const { livro, statusAtual } = Route.useLoaderData();
   return <DetalhesLivro key={livro.externalId} livro={livro} statusAtual={statusAtual} />;
@@ -46,6 +46,11 @@ function DetalhesLivro({ livro, statusAtual }: { livro: DetalhesLivroCatalogo; s
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState<Aviso | null>(null);
 
+  function irParaAutor() {
+    const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(ID_SECAO_AUTOR)?.scrollIntoView({ behavior: reduzirMovimento ? "auto" : "smooth", block: "start" });
+  }
+
   async function salvar(destino: "busca" | "perfil") {
     if (!status) return;
     setSalvando(true);
@@ -53,7 +58,7 @@ function DetalhesLivro({ livro, statusAtual }: { livro: DetalhesLivroCatalogo; s
       await adicionarNaEstante({ data: { externalId: livro.externalId, status } });
       setAviso({ tipo: "success", mensagem: `“${livro.titulo}” foi salvo na sua estante como ${rotuloDoStatus(status)}.` });
       setTimeout(() => {
-        if (destino === "busca") navigate({ to: "/livros/buscar", search: busca });
+        if (destino === "busca") navigate({ to: "/livros/buscar", search: { q: busca.q, pagina: busca.pagina } });
         else navigate({ to: "/perfil" });
       }, ESPERA_ANTES_DE_SAIR_MS);
     } catch (erro) {
@@ -94,7 +99,20 @@ function DetalhesLivro({ livro, statusAtual }: { livro: DetalhesLivroCatalogo; s
                 {livro.titulo}
               </Typography>
               <Typography sx={{ fontFamily: fontes.corpo, fontSize: 18, fontWeight: 500, color: cores.terracotaEscura, mt: 1 }}>
-                {livro.autor}
+                {livro.autorId ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    onClick={irParaAutor}
+                    underline="hover"
+                    aria-label={`${livro.autor}: ver mais sobre o autor`}
+                    sx={{ font: "inherit", color: "inherit", verticalAlign: "baseline", textAlign: "left" }}
+                  >
+                    {livro.autor}
+                  </Link>
+                ) : (
+                  livro.autor
+                )}
                 {livro.ano && (
                   <Box component="span" sx={{ color: cores.textoSuave, fontWeight: 400 }}>
                     {" "}· {livro.ano}
@@ -190,44 +208,35 @@ function DetalhesLivro({ livro, statusAtual }: { livro: DetalhesLivroCatalogo; s
             </Paper>
           </Stack>
         </Box>
+
+        {livro.autorId && <SobreAutor autorId={livro.autorId} externalIdAtual={livro.externalId} />}
       </Stack>
 
-      <Snackbar
-        open={aviso !== null}
-        autoHideDuration={aviso?.tipo === "error" ? 6000 : null}
-        onClose={(_, motivo) => motivo !== "clickaway" && setAviso(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          severity={aviso?.tipo ?? "success"}
-          variant="filled"
-          onClose={() => setAviso(null)}
-          sx={{
-            fontFamily: fontes.corpo,
-            fontWeight: 500,
-            borderRadius: 3,
-            border: retro.borda,
-            boxShadow: retro.sombraLeve,
-            backgroundColor: aviso?.tipo === "error" ? cores.terracotaEscura : cores.tinta,
-            color: cores.papel,
-            "& .MuiAlert-icon": { color: aviso?.tipo === "error" ? cores.papel : cores.mostarda },
-          }}
-        >
-          {aviso?.mensagem}
-        </Alert>
-      </Snackbar>
+      <AvisoRetro aviso={aviso} aoFechar={() => setAviso(null)} />
     </PaginaComCard>
   );
 }
 
-function VoltarParaBusca({ busca }: { busca: BuscaLivros }) {
+// volta para a busca, a estante ou o autor, conforme a origem guardada na URL
+function VoltarParaBusca({ busca }: { busca: BuscaLivro }) {
+  const estilo = { alignSelf: "flex-start", fontFamily: fontes.corpo, fontWeight: 700, fontSize: 15, color: cores.terracotaEscura };
+
+  if (busca.de === "estante") {
+    return (
+      <LinkRouter to="/estante" search={{ aba: busca.aba }} underline="hover" sx={estilo}>
+        ← Voltar para a estante
+      </LinkRouter>
+    );
+  }
+  if (busca.de === "autor" && busca.autor) {
+    return (
+      <LinkRouter to="/autores/$autorId" params={{ autorId: busca.autor }} underline="hover" sx={estilo}>
+        ← Voltar para o autor
+      </LinkRouter>
+    );
+  }
   return (
-    <LinkRouter
-      to="/livros/buscar"
-      search={busca}
-      underline="hover"
-      sx={{ alignSelf: "flex-start", fontFamily: fontes.corpo, fontWeight: 700, fontSize: 15, color: cores.terracotaEscura }}
-    >
+    <LinkRouter to="/livros/buscar" search={{ q: busca.q, pagina: busca.pagina }} underline="hover" sx={estilo}>
       ← Voltar para a busca
     </LinkRouter>
   );

@@ -32,6 +32,7 @@ model Profile {
   username       String   @unique
   bio            String?
   favorite_genre String?
+  avatar_url     String?  @db.Text
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 

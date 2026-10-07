@@ -1,5 +1,6 @@
-import { IsString, IsNotEmpty, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsIn, IsInt, IsOptional, Min } from 'class-validator';
 import { ReadingStatus } from '../../generated/prisma/enums';
+import { ABAS_ESTANTE, type AbaEstante } from './livros.estante';
 
 export class BuscarLivrosDto {
   @IsString()
@@ -36,4 +37,14 @@ export class ObterStatusNaEstanteDto {
 export class ListarEstanteDto {
   @IsEnum(ReadingStatus)
   status: ReadingStatus;
+}
+
+export class ListarEstantePaginadaDto {
+  @IsIn(ABAS_ESTANTE.map((aba) => aba.valor))
+  aba: AbaEstante;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  pagina?: number;
 }
