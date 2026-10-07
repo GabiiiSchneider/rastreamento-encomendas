@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
+import { cores, fontes, googleFontsUrl } from '../lib/tema'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -15,7 +16,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Rastreamento 🐾',
+        title: 'Estante 📚',
       },
     ],
     links: [
@@ -23,21 +24,27 @@ export const Route = createRootRoute({
         rel: 'stylesheet',
         href: appCss,
       },
+      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+      {
+        rel: 'stylesheet',
+        href: googleFontsUrl,
+      },
     ],
   }),
   shellComponent: RootDocument,
   notFoundComponent: () => (
-    <div style={{ textAlign: 'center', marginTop: '20vh', fontFamily: 'sans-serif' }}>
-      <div style={{ fontSize: 64 }}>😿</div>
-      <h2>Ops! Essa página fugiu igual gato assustado</h2>
-      <a href="/">Voltar para o início</a>
+    <div style={{ textAlign: 'center', paddingTop: '20vh', minHeight: '100vh', fontFamily: fontes.corpo, backgroundColor: cores.fundo, color: cores.preto }}>
+      <div style={{ fontSize: 64 }}>📚</div>
+      <h2 style={{ fontFamily: fontes.titulo, color: cores.roxo }}>Ops! Essa página sumiu como livro emprestado</h2>
+      <a href="/" style={{ color: cores.roxo }}>Voltar para a estante</a>
     </div>
   ),
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
