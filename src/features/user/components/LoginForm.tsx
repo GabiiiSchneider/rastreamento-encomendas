@@ -1,51 +1,71 @@
 import { useState } from "react";
-import { Card, CardContent, TextField, Button, Typography, Box } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
+import { Box, TextField, Button, Alert } from "@mui/material";
+import { loginUsuario } from "../auth.functions";
+import { cores, fontes } from "../../../lib/tema";
+
+const campoEscuro = {
+  "& .MuiOutlinedInput-root": {
+    color: cores.branco,
+    fontFamily: fontes.corpo,
+    borderRadius: 4,
+    backgroundColor: cores.campo,
+    "& fieldset": { borderColor: cores.borda },
+    "&:hover fieldset": { borderColor: cores.rosa },
+    "&.Mui-focused fieldset": { borderColor: cores.rosa, borderWidth: 2 },
+  },
+  "& .MuiInputLabel-root": { color: cores.cinza, fontFamily: fontes.corpo },
+  "& .MuiInputLabel-root.Mui-focused": { color: cores.rosa },
+};
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Próximo passo: chamar a server function de login aqui
-    console.log({ email, password });
+    setErro("");
+    setCarregando(true);
+
+    try {
+      await loginUsuario({ data: { email, password } });
+      navigate({ to: "/home" });
+    } catch (error) {
+      setErro((error as Error).message);
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
-    <Card sx={{ width: "100%", maxWidth: 400 }}>
-      <CardContent>
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: "bold", textAlign: "center" }}>
-            Entrar
-          </Typography>
+    <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 380 }}>
+      {erro && <Alert severity="error">{erro}</Alert>}
 
-          <TextField
-            label="E-mail"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            fullWidth
-          />
+      <TextField label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={campoEscuro} />
+      <TextField label="Senha" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={campoEscuro} />
 
-          <TextField
-            label="Senha"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            fullWidth
-          />
-
-          <Button type="submit" variant="contained" fullWidth>
-            Entrar
-          </Button>
-        </Box>
-      </CardContent>
-    </Card>
+      <Button
+        type="submit"
+        disabled={carregando}
+        sx={{
+          mt: 1,
+          py: 1.4,
+          borderRadius: 50,
+          backgroundColor: cores.limao,
+          color: cores.preto,
+          fontFamily: fontes.corpo,
+          fontWeight: 700,
+          fontSize: "1.1rem",
+          textTransform: "none",
+          "&:hover": { backgroundColor: cores.limaoEscuro },
+          "&.Mui-disabled": { backgroundColor: cores.limao, color: cores.preto, opacity: 0.6 },
+        }}
+      >
+        {carregando ? "Entrando..." : "Entrar"}
+      </Button>
+    </Box>
   );
 }
