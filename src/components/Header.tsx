@@ -2,7 +2,10 @@ import { AppBar, Toolbar, Typography, Stack, Avatar, Button, IconButton, Tooltip
 import { useNavigate } from "@tanstack/react-router";
 import { cores, fontes } from "../lib/tema";
 
-const menu = [{ label: "Início", rota: "/home" }] as const;
+const menu = [
+  { label: "Início", rota: "/home" },
+  { label: "Adicionar livros", rota: "/livros/buscar" },
+] as const;
 
 export function Header() {
   const navigate = useNavigate();

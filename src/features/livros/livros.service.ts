@@ -1,5 +1,6 @@
 import type { ProvedorCatalogo } from "../../catalogo/catalogo.port.ts";
 import type { ReadingStatus } from "../../generated/prisma/enums.ts";
+import type { Tradutor } from "../../traducao/traducao.port.ts";
 import type { LivrosRepository } from "./livros.repository.ts";
 import type { LivroNaEstante } from "./livros.types.ts";
 
@@ -11,18 +12,42 @@ type DatasLeitura = {
 export class LivrosService {
   private repository: LivrosRepository;
   private catalogo: ProvedorCatalogo;
+  private tradutor: Tradutor;
 
-  constructor(repository: LivrosRepository, catalogo: ProvedorCatalogo) {
+  constructor(repository: LivrosRepository, catalogo: ProvedorCatalogo, tradutor: Tradutor) {
     this.repository = repository;
     this.catalogo = catalogo;
+    this.tradutor = tradutor;
   }
 
-  buscarNoCatalogo(termo: string) {
-    return this.catalogo.buscarLivros(termo);
+  buscarNoCatalogo(termo: string, pagina = 1, idioma?: string) {
+    return this.catalogo.buscarLivros(termo, pagina, idioma);
   }
 
-  async adicionarNaEstante(userId: string, externalId: string, status: ReadingStatus, datas: DatasLeitura = {}) {
-    const livro = await this.obterOuSalvarLivro(externalId);
+  async obterDetalhes(externalId: string, idioma?: string) {
+    const detalhes = await this.catalogo.buscarDetalhes(externalId, idioma);
+    if (!detalhes || !idioma) return detalhes;
+
+    const [descricao, assuntos] = await Promise.all([
+      detalhes.descricao ? this.tradutor.traduzir([detalhes.descricao], idioma).then(([texto]) => texto) : null,
+      this.tradutor.traduzir(detalhes.assuntos, idioma),
+    ]);
+    return { ...detalhes, descricao, assuntos };
+  }
+
+  async obterStatusNaEstante(userId: string, externalId: string): Promise<ReadingStatus | null> {
+    const item = await this.repository.findUserBookByExternalId(userId, externalId);
+    return item?.status ?? null;
+  }
+
+  async adicionarNaEstante(
+    userId: string,
+    externalId: string,
+    status: ReadingStatus,
+    datas: DatasLeitura = {},
+    idioma?: string,
+  ) {
+    const livro = await this.obterOuSalvarLivro(externalId, idioma);
     const agora = new Date();
 
     return this.repository.upsertUserBook({
@@ -46,11 +71,11 @@ export class LivrosService {
     }));
   }
 
-  private async obterOuSalvarLivro(externalId: string) {
+  private async obterOuSalvarLivro(externalId: string, idioma?: string) {
     const existente = await this.repository.findBookByExternalId(externalId);
     if (existente) return existente;
 
-    const doCatalogo = await this.catalogo.buscarPorId(externalId);
+    const doCatalogo = await this.catalogo.buscarPorId(externalId, idioma);
     if (!doCatalogo) {
       throw new Error("Livro não encontrado no catálogo");
     }
