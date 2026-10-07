@@ -1,3 +1,4 @@
+import { Header } from '#/components/Header'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/home')({
@@ -5,5 +6,6 @@ export const Route = createFileRoute('/home')({
 })
 
 function RouteComponent() {
-  return <div>Hello "/home"!</div>
+  return <Header />
 }
+ 

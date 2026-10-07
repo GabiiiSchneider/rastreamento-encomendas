@@ -6,16 +6,16 @@ import { cores, fontes } from "../../../lib/tema";
 
 const campoEscuro = {
   "& .MuiOutlinedInput-root": {
-    color: cores.branco,
+    color: cores.papel,
     fontFamily: fontes.corpo,
-    borderRadius: 4,
-    backgroundColor: cores.campo,
-    "& fieldset": { borderColor: cores.borda },
+    borderRadius: 3,
+    backgroundColor: cores.tintaClara,
+    "& fieldset": { borderColor: cores.bordaEscura },
     "&:hover fieldset": { borderColor: cores.rosa },
-    "&.Mui-focused fieldset": { borderColor: cores.rosa, borderWidth: 2 },
+    "&.Mui-focused fieldset": { borderColor: cores.mostarda, borderWidth: 2 },
   },
-  "& .MuiInputLabel-root": { color: cores.cinza, fontFamily: fontes.corpo },
-  "& .MuiInputLabel-root.Mui-focused": { color: cores.rosa },
+  "& .MuiInputLabel-root": { color: cores.textoClaro, fontFamily: fontes.corpo },
+  "& .MuiInputLabel-root.Mui-focused": { color: cores.mostarda },
 };
 
 export function LoginForm() {
@@ -53,15 +53,21 @@ export function LoginForm() {
         sx={{
           mt: 1,
           py: 1.4,
-          borderRadius: 50,
-          backgroundColor: cores.limao,
-          color: cores.preto,
+          borderRadius: 3,
+          backgroundColor: cores.mostarda,
+          color: cores.tinta,
+          boxShadow: `4px 4px 0 ${cores.terracota}`,
           fontFamily: fontes.corpo,
           fontWeight: 700,
           fontSize: "1.1rem",
           textTransform: "none",
-          "&:hover": { backgroundColor: cores.limaoEscuro },
-          "&.Mui-disabled": { backgroundColor: cores.limao, color: cores.preto, opacity: 0.6 },
+          transition: "transform 0.15s, box-shadow 0.15s",
+          "&:hover": {
+            backgroundColor: cores.mostardaEscura,
+            transform: "translate(-1px, -1px)",
+            boxShadow: `5px 5px 0 ${cores.terracota}`,
+          },
+          "&.Mui-disabled": { backgroundColor: cores.mostarda, color: cores.tinta, opacity: 0.6 },
         }}
       >
         {carregando ? "Entrando..." : "Entrar"}
