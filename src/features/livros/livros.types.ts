@@ -1,8 +1,8 @@
-export interface Livro {
+export interface LivroNaEstante {
     id: string
+    externalId: string
     titulo: string
     autor: string
-    ano: number
-    capa: string
+    genero: string | null
+    capaUrl: string | null
 }
-export type LivrosData = Livro []

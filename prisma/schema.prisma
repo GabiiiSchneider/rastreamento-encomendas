@@ -20,9 +20,72 @@ model User {
   role       Role     @default(USER)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  profile Profile?
+  books   UserBook[]
+  goals   ReadingGoal[]
+}
+
+model Profile {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  user_id        String   @unique @db.VarChar(36)
+  username       String   @unique
+  bio            String?
+  favorite_genre String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 enum Role {
   ADMIN
   USER
+}
+
+enum ReadingStatus {
+  WANT_TO_READ
+  READING
+  READ
+}
+
+model Book {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  external_id  String   @unique
+  title        String
+  author       String
+  genre        String?
+  cover_url    String?
+  published_at Int?
+  created_at   DateTime @default(now())
+
+  users UserBook[]
+}
+
+model UserBook {
+  id          String        @id @default(uuid()) @db.VarChar(36)
+  user_id     String        @db.VarChar(36)
+  book_id     String        @db.VarChar(36)
+  status      ReadingStatus @default(WANT_TO_READ)
+  started_at  DateTime?
+  finished_at DateTime?
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [book_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, book_id])
+}
+
+model ReadingGoal {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  user_id    String   @db.VarChar(36)
+  year       Int
+  target     Int
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, year])
 }

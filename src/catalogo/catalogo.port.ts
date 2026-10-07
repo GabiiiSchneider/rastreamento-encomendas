@@ -1,5 +1,13 @@
-import type { Livro } from '../features/livros/livros.types'
+export interface LivroCatalogo {
+  externalId: string
+  titulo: string
+  autor: string
+  ano: number | null
+  capaUrl: string | null
+  genero: string | null
+}
 
 export interface ProvedorCatalogo {
-  buscar(termo: string): Promise<Livro[]>
+  buscarLivros(termo: string): Promise<LivroCatalogo[]>
+  buscarPorId(externalId: string): Promise<LivroCatalogo | null>
 }
