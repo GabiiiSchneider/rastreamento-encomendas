@@ -54,6 +54,13 @@ export class LivrosRepository {
     });
   }
 
+  findUserBookByExternalId(userId: string, externalId: string) {
+    return this.prisma.userBook.findFirst({
+      where: { user_id: userId, book: { external_id: externalId } },
+      select: { status: true },
+    });
+  }
+
   findUserBooksByStatus(userId: string, status: ReadingStatus) {
     return this.prisma.userBook.findMany({
       where: { user_id: userId, status },
