@@ -1,6 +1,6 @@
 import { Avatar, Box, Chip, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { cores, fontes, retro } from "../../../lib/tema";
-import type { PerfilUsuario } from "../perfil.mock";
+import type { PerfilUsuario } from "../perfil.types";
 
 type Props = {
   perfil: PerfilUsuario;
@@ -8,13 +8,13 @@ type Props = {
 
 export function CartaoUsuario({ perfil }: Props) {
   const { estatisticas, meta } = perfil;
-  const porcentagem = Math.min(100, Math.round((meta.lidos / meta.objetivo) * 100));
+  const porcentagem = meta && meta.objetivo > 0 ? Math.min(100, Math.round((meta.lidos / meta.objetivo) * 100)) : 0;
 
   const numeros = [
     { label: "lidos no mês", valor: estatisticas.lidosNoMes, fundo: cores.rosa, texto: cores.tinta },
     { label: "total lidos", valor: estatisticas.totalLidos, fundo: cores.mostarda, texto: cores.tinta },
     { label: "quero ler", valor: estatisticas.queroLer, fundo: cores.azul, texto: cores.tinta },
-    { label: "resenhas", valor: estatisticas.resenhas, fundo: cores.terracotaEscura, texto: cores.papel },
+    { label: "lendo agora", valor: estatisticas.lendo, fundo: cores.terracotaEscura, texto: cores.papel },
   ];
 
   return (
@@ -50,9 +50,11 @@ export function CartaoUsuario({ perfil }: Props) {
         <Typography sx={{ fontFamily: fontes.titulo, fontStyle: "italic", fontWeight: 600, fontSize: 28, lineHeight: 1.1, color: cores.tinta }}>
           {perfil.nome}
         </Typography>
-        <Typography sx={{ fontFamily: fontes.corpo, fontSize: 16, color: cores.terracotaEscura, fontWeight: 500 }}>
-          @{perfil.usuario}
-        </Typography>
+        {perfil.usuario && (
+          <Typography sx={{ fontFamily: fontes.corpo, fontSize: 16, color: cores.terracotaEscura, fontWeight: 500 }}>
+            @{perfil.usuario}
+          </Typography>
+        )}
       </Stack>
 
       <Box
@@ -99,31 +101,39 @@ export function CartaoUsuario({ perfil }: Props) {
 
       <Paper elevation={0} sx={{ backgroundColor: cores.papel, border: retro.borda, borderRadius: 4, p: 2 }}>
         <Typography sx={{ fontFamily: fontes.titulo, fontStyle: "italic", fontWeight: 600, fontSize: 22, color: cores.terracotaEscura }}>
-          Meta de {meta.ano}
+          {meta ? `Meta de ${meta.ano}` : "Meta do ano"}
         </Typography>
-        <Typography sx={{ fontFamily: fontes.corpo, fontSize: 14, color: cores.textoSuave, mb: 1.5 }}>
-          {meta.lidos} de {meta.objetivo} livros lidos
-        </Typography>
-        <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }}>
-          <LinearProgress
-            variant="determinate"
-            value={porcentagem}
-            sx={{
-              flexGrow: 1,
-              height: 12,
-              borderRadius: 50,
-              backgroundColor: cores.fundo,
-              border: `1px solid ${cores.tinta}`,
-              "& .MuiLinearProgress-bar": {
-                borderRadius: 50,
-                backgroundColor: cores.terracota,
-              },
-            }}
-          />
-          <Typography sx={{ fontFamily: fontes.corpo, fontSize: 14, fontWeight: 700, color: cores.terracotaEscura }}>
-            {porcentagem}%
+        {meta ? (
+          <>
+            <Typography sx={{ fontFamily: fontes.corpo, fontSize: 14, color: cores.textoSuave, mb: 1.5 }}>
+              {meta.lidos} de {meta.objetivo} livros lidos
+            </Typography>
+            <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }}>
+              <LinearProgress
+                variant="determinate"
+                value={porcentagem}
+                sx={{
+                  flexGrow: 1,
+                  height: 12,
+                  borderRadius: 50,
+                  backgroundColor: cores.fundo,
+                  border: `1px solid ${cores.tinta}`,
+                  "& .MuiLinearProgress-bar": {
+                    borderRadius: 50,
+                    backgroundColor: cores.terracota,
+                  },
+                }}
+              />
+              <Typography sx={{ fontFamily: fontes.corpo, fontSize: 14, fontWeight: 700, color: cores.terracotaEscura }}>
+                {porcentagem}%
+              </Typography>
+            </Stack>
+          </>
+        ) : (
+          <Typography sx={{ fontFamily: fontes.corpo, fontSize: 14, color: cores.textoSuave }}>
+            Nenhuma meta de leitura definida para este ano.
           </Typography>
-        </Stack>
+        )}
       </Paper>
     </Paper>
   );
