@@ -3,10 +3,12 @@ import { livrosService } from "./livros.compose";
 import { obterUsuarioAtualId } from "../user/usuario-atual";
 import { obterIdiomaDoNavegador } from "../../traducao/idioma";
 import { livroIdValido, paraExternalId } from "./livros.ids";
+import { abaValida } from "./livros.estante";
 import type {
   AdicionarNaEstanteDto,
   BuscarLivrosDto,
   ListarEstanteDto,
+  ListarEstantePaginadaDto,
   ObterLivroDto,
   ObterStatusNaEstanteDto,
 } from "./livros.dto";
@@ -48,4 +50,12 @@ export const listarMinhaEstante = createServerFn({ method: "GET" })
     const userId = await obterUsuarioAtualId();
     if (!userId) return [];
     return livrosService.listarEstante(userId, data.status);
+  });
+
+export const listarEstantePaginada = createServerFn({ method: "GET" })
+  .validator((data: ListarEstantePaginadaDto) => data)
+  .handler(async ({ data }) => {
+    const userId = await obterUsuarioAtualId();
+    if (!userId || !abaValida(data.aba)) return { livros: [], total: 0, pagina: 1, porPagina: 12 };
+    return livrosService.listarEstantePaginada(userId, data.aba, data.pagina);
   });

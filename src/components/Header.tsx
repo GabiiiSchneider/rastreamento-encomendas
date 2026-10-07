@@ -1,5 +1,5 @@
 import { AppBar, Toolbar, Typography, Stack, Avatar, Button, IconButton, Tooltip } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
+import { useLoaderData, useNavigate } from "@tanstack/react-router";
 import { cores, fontes } from "../lib/tema";
 
 const menu = [
@@ -9,6 +9,7 @@ const menu = [
 
 export function Header() {
   const navigate = useNavigate();
+  const { usuario } = useLoaderData({ from: "__root__" });
 
   return (
     <AppBar
@@ -56,6 +57,8 @@ export function Header() {
           <Tooltip title="Meu perfil">
             <IconButton onClick={() => navigate({ to: "/perfil" })} sx={{ p: 0 }}>
               <Avatar
+                src={usuario?.avatarUrl ?? undefined}
+                alt={usuario ? `Foto de ${usuario.nome}` : undefined}
                 sx={{
                   backgroundColor: cores.terracota,
                   color: cores.papel,
@@ -64,7 +67,7 @@ export function Header() {
                   fontWeight: 700,
                 }}
               >
-                G
+                {usuario?.nome.charAt(0).toUpperCase()}
               </Avatar>
             </IconButton>
           </Tooltip>

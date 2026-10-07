@@ -1,14 +1,19 @@
-import type { DetalhesLivroCatalogo, LivroCatalogo, ProvedorCatalogo } from './catalogo.port.ts'
+import type { AutorCatalogo, DetalhesLivroCatalogo, LivroCatalogo, ProvedorCatalogo } from './catalogo.port.ts'
 
 const URL_BASE = 'https://openlibrary.org'
 const URL_BUSCA = `${URL_BASE}/search.json`
 const URL_CAPA = 'https://covers.openlibrary.org/b/id'
-const CAMPOS = 'key,title,author_name,first_publish_year,cover_i,subject,editions,editions.title,editions.language'
+const URL_FOTO_AUTOR = 'https://covers.openlibrary.org/a/id'
+const CAMPOS = 'key,title,author_name,author_key,first_publish_year,cover_i,subject,editions,editions.title,editions.language'
 const USER_AGENT = 'Estante/1.0 (rede social de leitores, projeto de estudo)'
 const LIVROS_POR_PAGINA = 12
+const LIMITE_MAXIMO = 50
+// obras com mais autores que isso são coletâneas (ex.: "Great Short Stories of the World", com 70)
+const MAXIMO_AUTORES_OBRA = 5
 const LIMITE_ASSUNTOS = 8
 const TEMPO_LIMITE_MS = 8000
 const FORMATO_ID_OBRA = /^\/works\/OL\d+W$/
+const FORMATO_ID_AUTOR = /^OL\d+A$/
 
 type EdicaoOpenLibrary = {
   title?: string
@@ -20,6 +25,7 @@ type DocOpenLibrary = {
   title?: string
   editions?: { docs?: EdicaoOpenLibrary[] }
   author_name?: string[]
+  author_key?: string[]
   first_publish_year?: number
   cover_i?: number
   subject?: string[]
@@ -36,6 +42,17 @@ type ObraOpenLibrary = {
   subjects?: string[]
   covers?: number[]
   first_publish_date?: string
+  authors?: Array<{ author?: { key?: string } }>
+}
+
+type AutorOpenLibrary = {
+  type?: { key?: string }
+  location?: string
+  name?: string
+  bio?: string | { value?: string }
+  birth_date?: string
+  death_date?: string
+  photos?: number[]
 }
 
 // a busca recebe o idioma em ISO 639-1 ("pt"), mas as edições vêm marcadas com o código MARC ("por")
@@ -92,12 +109,15 @@ function tituloNoIdioma(doc: DocOpenLibrary, idioma?: string): string | undefine
   return edicao?.language?.includes(marc) ? edicao.title : undefined
 }
 
-function paraLivroCatalogo(doc: DocOpenLibrary, idioma?: string): LivroCatalogo | null {
+// em coautorias, autorPreferido faz o cartão mostrar o autor da página em vez do primeiro da lista
+function paraLivroCatalogo(doc: DocOpenLibrary, idioma?: string, autorPreferido?: string): LivroCatalogo | null {
   if (!doc.key || !doc.title) return null
+  const indiceAutor = Math.max(0, autorPreferido ? (doc.author_key?.indexOf(autorPreferido) ?? 0) : 0)
   return {
     externalId: doc.key,
     titulo: tituloNoIdioma(doc, idioma) ?? doc.title,
-    autor: doc.author_name?.[0] ?? 'Autor desconhecido',
+    autor: doc.author_name?.[indiceAutor] ?? doc.author_name?.[0] ?? 'Autor desconhecido',
+    autorId: doc.author_key?.[indiceAutor] ?? null,
     ano: doc.first_publish_year ?? null,
     capaUrl: doc.cover_i ? urlCapa(doc.cover_i) : null,
     genero: extrairGenero(doc.subject),
@@ -143,16 +163,83 @@ async function obterJson<T>(url: string): Promise<T | null> {
   return (await resposta.json()) as T
 }
 
-async function consultar(q: string, limite: number, pagina = 1, idioma?: string) {
+type OpcoesConsulta = {
+  ordem?: string
+  autorPreferido?: string
+  semColetaneas?: boolean
+}
+
+async function consultar(q: string, limite: number, pagina = 1, idioma?: string, opcoes: OpcoesConsulta = {}) {
   const parametros = new URLSearchParams({ q, fields: CAMPOS, limit: String(limite), page: String(pagina) })
+  if (opcoes.ordem) parametros.set('sort', opcoes.ordem)
   const lang = codigoIdioma(idioma)
   if (lang) parametros.set('lang', lang)
   const dados = await obterJson<RespostaBusca>(`${URL_BUSCA}?${parametros}`)
+  const docs = (dados?.docs ?? []).filter((doc) => !opcoes.semColetaneas || (doc.author_key?.length ?? 0) <= MAXIMO_AUTORES_OBRA)
 
   return {
-    livros: (dados?.docs ?? []).map((doc) => paraLivroCatalogo(doc, idioma)).filter((livro) => livro !== null),
+    livros: docs.map((doc) => paraLivroCatalogo(doc, idioma, opcoes.autorPreferido)).filter((livro) => livro !== null),
     total: dados?.numFound ?? 0,
   }
+}
+
+const MESES: Record<string, string> = {
+  january: 'janeiro',
+  february: 'fevereiro',
+  march: 'março',
+  april: 'abril',
+  may: 'maio',
+  june: 'junho',
+  july: 'julho',
+  august: 'agosto',
+  september: 'setembro',
+  october: 'outubro',
+  november: 'novembro',
+  december: 'dezembro',
+}
+
+// as datas de autores são texto livre ("21 June 1839", "June 21, 1839", "1839"); só traduz os formatos conhecidos
+function formatarData(data?: string): string | null {
+  const texto = data?.trim()
+  if (!texto) return null
+
+  const diaMesAno = texto.match(/^(\d{1,2}) ([A-Za-z]+),? (\d{3,4})$/)
+  const mesDiaAno = texto.match(/^([A-Za-z]+) (\d{1,2}),? (\d{3,4})$/)
+  const mesAno = texto.match(/^([A-Za-z]+),? (\d{3,4})$/)
+
+  if (diaMesAno && MESES[diaMesAno[2].toLowerCase()]) return `${diaMesAno[1]} de ${MESES[diaMesAno[2].toLowerCase()]} de ${diaMesAno[3]}`
+  if (mesDiaAno && MESES[mesDiaAno[1].toLowerCase()]) return `${mesDiaAno[2]} de ${MESES[mesDiaAno[1].toLowerCase()]} de ${mesDiaAno[3]}`
+  if (mesAno && MESES[mesAno[1].toLowerCase()]) return `${MESES[mesAno[1].toLowerCase()]} de ${mesAno[2]}`
+  return texto
+}
+
+function normalizarTitulo(titulo: string) {
+  return titulo
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\(.*?\)/g, '')
+    .replace(/[^a-z0-9]/gi, '')
+    .toLowerCase()
+}
+
+// a Open Library às vezes cadastra a mesma obra duas vezes (ex.: "Esaú e Jacó" e "Esau e Jacó")
+function semTitulosRepetidos(livros: LivroCatalogo[]) {
+  const vistos = new Set<string>()
+  return livros.filter((livro) => {
+    const chave = normalizarTitulo(livro.titulo)
+    if (vistos.has(chave)) return false
+    vistos.add(chave)
+    return true
+  })
+}
+
+async function obterAutorJson(autorId: string) {
+  const autor = await obterJson<AutorOpenLibrary>(`${URL_BASE}/authors/${autorId}.json`)
+  // autores mesclados viram um redirecionamento para o registro principal
+  if (autor?.type?.key === '/type/redirect' && autor.location?.startsWith('/authors/')) {
+    return obterJson<AutorOpenLibrary>(`${URL_BASE}${autor.location}.json`)
+  }
+  return autor
 }
 
 export const provedorCatalogoOpenLibrary: ProvedorCatalogo = {
@@ -187,6 +274,7 @@ export const provedorCatalogoOpenLibrary: ProvedorCatalogo = {
       externalId,
       titulo: resumo?.titulo ?? obra.title,
       autor: resumo?.autor ?? 'Autor desconhecido',
+      autorId: resumo?.autorId ?? obra.authors?.[0]?.author?.key?.replace('/authors/', '') ?? null,
       ano: resumo?.ano ?? extrairAno(obra.first_publish_date),
       capaUrl: idCapa ? urlCapa(idCapa, 'L') : (resumo?.capaUrl?.replace('-M.jpg', '-L.jpg') ?? null),
       genero: resumo?.genero ?? extrairGenero(obra.subjects),
@@ -195,5 +283,39 @@ export const provedorCatalogoOpenLibrary: ProvedorCatalogo = {
       assuntos: (obra.subjects ?? []).filter((assunto) => !assunto.includes(':')).slice(0, LIMITE_ASSUNTOS),
     }
     return detalhes
+  },
+
+  async buscarAutor(autorId) {
+    if (!FORMATO_ID_AUTOR.test(autorId)) return null
+
+    const autor = await obterAutorJson(autorId)
+    if (!autor?.name) return null
+
+    const idFoto = autor.photos?.find((id) => id > 0)
+    const resultado: AutorCatalogo = {
+      id: autorId,
+      nome: autor.name,
+      fotoUrl: idFoto ? `${URL_FOTO_AUTOR}/${idFoto}-M.jpg` : null,
+      nascimento: formatarData(autor.birth_date),
+      morte: formatarData(autor.death_date),
+      biografia: extrairDescricao(autor.bio),
+    }
+    return resultado
+  },
+
+  // testado: /authors/{id}/works.json não ordena e traz traduções como obras separadas;
+  // a busca por author_key agrupa as edições na obra e ordena por popularidade com sort=readinglog.
+  // coletâneas saem da lista, então algumas páginas podem vir com um ou dois livros a menos
+  async buscarLivrosDoAutor(autorId, pagina = 1, idioma, limite = LIVROS_POR_PAGINA) {
+    const paginaValida = Math.max(1, Math.floor(pagina))
+    const limiteValido = Math.min(LIMITE_MAXIMO, Math.max(1, Math.floor(limite)))
+    if (!FORMATO_ID_AUTOR.test(autorId)) return { livros: [], total: 0, pagina: paginaValida, porPagina: limiteValido }
+
+    const { livros, total } = await consultar(`author_key:${autorId}`, limiteValido, paginaValida, idioma, {
+      ordem: 'readinglog',
+      autorPreferido: autorId,
+      semColetaneas: true,
+    })
+    return { livros: semTitulosRepetidos(livros), total, pagina: paginaValida, porPagina: limiteValido }
   },
 }

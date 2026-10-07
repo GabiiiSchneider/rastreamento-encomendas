@@ -1,10 +1,11 @@
 import { useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Box, Chip, IconButton, Paper, Stack, Typography } from "@mui/material";
+import { Box, Chip, IconButton, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { cores, fontes, retro } from "../../../lib/tema";
 import type { LivroNaEstante } from "../../livros/livros.types";
 import { estiloDoLivro } from "../../livros/components/estilosCapa";
 import { BotaoRetro } from "../../../components/BotaoRetro";
+import { IconeMais } from "../../../components/Icones";
 
 type Props = {
   livros: LivroNaEstante[];
@@ -43,9 +44,6 @@ export function CarrosselLivros({ livros }: Props) {
           </Typography>
         </Box>
         <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <BotaoRetro onClick={() => navigate({ to: "/livros/buscar" })} sx={{ px: 2, py: 0.75, fontSize: 14 }}>
-            + Adicionar livro
-          </BotaoRetro>
           {livros.length > 0 && (
             <>
               <IconButton aria-label="Voltar" onClick={() => rolar(-1)} sx={estiloSeta}>
@@ -54,6 +52,15 @@ export function CarrosselLivros({ livros }: Props) {
               <IconButton aria-label="Avançar" onClick={() => rolar(1)} sx={estiloSeta}>
                 ›
               </IconButton>
+              <Tooltip title="Ver todos">
+                <IconButton
+                  aria-label="Ver todos os livros lidos"
+                  onClick={() => navigate({ to: "/estante", search: { aba: "total-lidos" } })}
+                  sx={{ ...estiloSeta, backgroundColor: cores.mostarda, color: cores.tinta, border: retro.borda, "&:hover": { backgroundColor: cores.mostardaEscura } }}
+                >
+                  <IconeMais sx={{ fontSize: 22 }} />
+                </IconButton>
+              </Tooltip>
             </>
           )}
         </Stack>

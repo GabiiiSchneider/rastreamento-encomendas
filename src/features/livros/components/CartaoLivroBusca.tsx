@@ -1,13 +1,22 @@
 import { Box, Chip, Paper, Skeleton, Typography } from "@mui/material";
 import { LinkRouter } from "../../../components/LinkRouter";
 import { cores, fontes, retro } from "../../../lib/tema";
-import type { LivroCatalogo } from "../../../catalogo/catalogo.port";
 import { paraLivroId } from "../livros.ids";
+import type { BuscaLivro } from "../livros.busca";
 import { estiloDoLivro, indiceDoId } from "./estilosCapa";
 
+// serve para livros do catálogo e da estante
+export type LivroDoCartao = {
+  externalId: string;
+  titulo: string;
+  autor: string;
+  capaUrl: string | null;
+  ano?: number | null;
+};
+
 type Props = {
-  livro: LivroCatalogo;
-  busca: { q?: string; pagina?: number };
+  livro: LivroDoCartao;
+  busca?: BuscaLivro;
 };
 
 const ALTURA_CARTAO = 280;
@@ -19,7 +28,7 @@ export function CartaoLivroBusca({ livro, busca }: Props) {
     <LinkRouter
       to="/livros/$livroId"
       params={{ livroId: paraLivroId(livro.externalId) }}
-      search={busca}
+      search={busca ?? {}}
       underline="none"
       aria-label={`${livro.titulo}, de ${livro.autor}`}
       sx={{

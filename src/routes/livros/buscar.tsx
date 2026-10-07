@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Box, InputBase, Pagination, Paper, Stack, Typography } from "@mui/material";
+import { Box, InputBase, Paper, Stack, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { PaginaComCard } from "../../components/PaginaComCard";
 import { BotaoRetro } from "../../components/BotaoRetro";
@@ -8,7 +8,10 @@ import { cores, fontes, retro } from "../../lib/tema";
 import type { LivroCatalogo } from "../../catalogo/catalogo.port";
 import { buscarLivros } from "../../features/livros/livros.functions";
 import { validarBuscaLivros } from "../../features/livros/livros.busca";
-import { CartaoLivroBusca, CartaoLivroCarregando } from "../../features/livros/components/CartaoLivroBusca";
+import { useListaPaginada, type EstadoLista } from "../../features/livros/useListaPaginada";
+import { CartaoLivroBusca } from "../../features/livros/components/CartaoLivroBusca";
+import { GradeCarregando, gradeLivros } from "../../features/livros/components/GradeLivros";
+import { PaginacaoResponsiva } from "../../features/livros/components/PaginacaoResponsiva";
 import { MensagemEstado } from "../../features/livros/components/MensagemEstado";
 
 export const Route = createFileRoute("/livros/buscar")({
@@ -16,81 +19,32 @@ export const Route = createFileRoute("/livros/buscar")({
   component: BuscarLivrosPage,
 });
 
-type EstadoBusca =
-  | { tipo: "inicial" }
-  | { tipo: "carregando" }
-  | { tipo: "erro"; mensagem: string }
-  | { tipo: "pronto"; livros: LivroCatalogo[]; total: number; porPagina: number; ultimaPagina: number };
-
-const ITENS_CARREGANDO = 8;
-
-function mensagemDeErro(erro: unknown) {
-  return erro instanceof Error && erro.message ? erro.message : "Algo deu errado ao buscar os livros.";
-}
-
-function semRepetidos(livros: LivroCatalogo[]) {
-  const vistos = new Set<string>();
-  return livros.filter((livro) => !vistos.has(livro.externalId) && vistos.add(livro.externalId));
-}
-
 function BuscarLivrosPage() {
   const { q, pagina = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
-
   const [texto, setTexto] = useState(q ?? "");
-  const [estado, setEstado] = useState<EstadoBusca>({ tipo: q ? "carregando" : "inicial" });
-  const [carregandoMais, setCarregandoMais] = useState(false);
-  const [erroMais, setErroMais] = useState<string | null>(null);
-  const [tentativa, setTentativa] = useState(0);
-  const jaCarregado = useRef<{ q: string; pagina: number } | null>(null);
+
+  const lista = useListaPaginada<LivroCatalogo>({
+    chave: q ?? null,
+    pagina,
+    carregar: async (numero) => {
+      const resultado = await buscarLivros({ data: { termo: q ?? "", pagina: numero } });
+      return { itens: resultado.livros, total: resultado.total, porPagina: resultado.porPagina };
+    },
+    // guarda a página na URL para o "voltar" retornar ao mesmo ponto
+    aoCarregarMais: (proxima) => navigate({ search: (atual) => ({ ...atual, pagina: proxima }), replace: true, resetScroll: false }),
+  });
 
   useEffect(() => {
     setTexto(q ?? "");
   }, [q]);
-
-  useEffect(() => {
-    setErroMais(null);
-    if (!q) {
-      jaCarregado.current = null;
-      setEstado({ tipo: "inicial" });
-      return;
-    }
-    if (jaCarregado.current?.q === q && jaCarregado.current.pagina === pagina) return;
-
-    let cancelado = false;
-    setEstado({ tipo: "carregando" });
-    buscarLivros({ data: { termo: q, pagina } })
-      .then((resultado) => {
-        if (cancelado) return;
-        jaCarregado.current = { q, pagina };
-        setEstado({
-          tipo: "pronto",
-          livros: semRepetidos(resultado.livros),
-          total: resultado.total,
-          porPagina: resultado.porPagina,
-          ultimaPagina: pagina,
-        });
-      })
-      .catch((erro) => {
-        if (!cancelado) setEstado({ tipo: "erro", mensagem: mensagemDeErro(erro) });
-      });
-
-    return () => {
-      cancelado = true;
-    };
-  }, [q, pagina, tentativa]);
-
-  function tentarDeNovo() {
-    jaCarregado.current = null;
-    setTentativa((t) => t + 1);
-  }
 
   function buscar(evento: FormEvent) {
     evento.preventDefault();
     const termo = texto.trim();
     if (!termo) return;
     if (termo === q && pagina === 1) {
-      tentarDeNovo();
+      lista.tentarDeNovo();
       return;
     }
     navigate({ search: { q: termo } });
@@ -98,29 +52,6 @@ function BuscarLivrosPage() {
 
   function irParaPagina(novaPagina: number) {
     navigate({ search: (atual) => ({ ...atual, pagina: novaPagina > 1 ? novaPagina : undefined }) });
-  }
-
-  async function carregarMais() {
-    if (estado.tipo !== "pronto" || !q) return;
-    const proxima = estado.ultimaPagina + 1;
-
-    setCarregandoMais(true);
-    setErroMais(null);
-    try {
-      const resultado = await buscarLivros({ data: { termo: q, pagina: proxima } });
-      jaCarregado.current = { q, pagina: proxima };
-      setEstado((atual) =>
-        atual.tipo === "pronto"
-          ? { ...atual, livros: semRepetidos([...atual.livros, ...resultado.livros]), total: resultado.total, ultimaPagina: proxima }
-          : atual,
-      );
-      // guarda a página na URL para o "voltar" retornar ao mesmo ponto
-      navigate({ search: (atual) => ({ ...atual, pagina: proxima }), replace: true, resetScroll: false });
-    } catch (erro) {
-      setErroMais(mensagemDeErro(erro));
-    } finally {
-      setCarregandoMais(false);
-    }
   }
 
   return (
@@ -176,39 +107,22 @@ function BuscarLivrosPage() {
           </BotaoRetro>
         </Paper>
 
-        <Resultados
-          estado={estado}
-          q={q}
-          pagina={pagina}
-          carregandoMais={carregandoMais}
-          erroMais={erroMais}
-          aoTentarDeNovo={tentarDeNovo}
-          aoMudarPagina={irParaPagina}
-          aoCarregarMais={carregarMais}
-        />
+        <Resultados lista={lista} q={q} pagina={pagina} aoMudarPagina={irParaPagina} />
       </Stack>
     </PaginaComCard>
   );
 }
 
 type ResultadosProps = {
-  estado: EstadoBusca;
+  lista: ReturnType<typeof useListaPaginada<LivroCatalogo>>;
   q?: string;
   pagina: number;
-  carregandoMais: boolean;
-  erroMais: string | null;
-  aoTentarDeNovo: () => void;
   aoMudarPagina: (pagina: number) => void;
-  aoCarregarMais: () => void;
 };
 
-const grade = {
-  display: "grid",
-  gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
-  gap: { xs: 2, md: 3 },
-};
+function Resultados({ lista, q, pagina, aoMudarPagina }: ResultadosProps) {
+  const estado: EstadoLista<LivroCatalogo> = lista.estado;
 
-function Resultados({ estado, q, pagina, carregandoMais, erroMais, aoTentarDeNovo, aoMudarPagina, aoCarregarMais }: ResultadosProps) {
   if (estado.tipo === "inicial") {
     return (
       <MensagemEstado
@@ -219,13 +133,7 @@ function Resultados({ estado, q, pagina, carregandoMais, erroMais, aoTentarDeNov
   }
 
   if (estado.tipo === "carregando") {
-    return (
-      <Box sx={grade} aria-busy="true" aria-label="Carregando resultados">
-        {Array.from({ length: ITENS_CARREGANDO }, (_, i) => (
-          <CartaoLivroCarregando key={i} />
-        ))}
-      </Box>
-    );
+    return <GradeCarregando />;
   }
 
   if (estado.tipo === "erro") {
@@ -234,7 +142,7 @@ function Resultados({ estado, q, pagina, carregandoMais, erroMais, aoTentarDeNov
         titulo="Não deu para buscar agora"
         texto={estado.mensagem}
         acao={
-          <BotaoRetro onClick={aoTentarDeNovo} sx={{ mt: 3 }}>
+          <BotaoRetro onClick={lista.tentarDeNovo} sx={{ mt: 3 }}>
             Tentar de novo
           </BotaoRetro>
         }
@@ -242,7 +150,7 @@ function Resultados({ estado, q, pagina, carregandoMais, erroMais, aoTentarDeNov
     );
   }
 
-  if (estado.livros.length === 0) {
+  if (estado.itens.length === 0) {
     return (
       <MensagemEstado
         titulo="Nenhum livro encontrado"
@@ -251,8 +159,6 @@ function Resultados({ estado, q, pagina, carregandoMais, erroMais, aoTentarDeNov
     );
   }
 
-  const totalPaginas = Math.max(1, Math.ceil(estado.total / estado.porPagina));
-  const temMais = estado.ultimaPagina < totalPaginas;
   const busca = { q, pagina: pagina > 1 ? pagina : undefined };
 
   return (
@@ -264,68 +170,21 @@ function Resultados({ estado, q, pagina, carregandoMais, erroMais, aoTentarDeNov
         </Box>
       </Typography>
 
-      <Box sx={grade}>
-        {estado.livros.map((livro) => (
+      <Box sx={gradeLivros}>
+        {estado.itens.map((livro) => (
           <CartaoLivroBusca key={livro.externalId} livro={livro} busca={busca} />
         ))}
       </Box>
 
-      {totalPaginas > 1 && (
-        <Box sx={{ display: { xs: "none", sm: "flex" }, justifyContent: "center", pt: 1 }}>
-          <Pagination
-            count={totalPaginas}
-            page={Math.min(pagina, totalPaginas)}
-            onChange={(_, novaPagina) => aoMudarPagina(novaPagina)}
-            shape="rounded"
-            siblingCount={1}
-            sx={{
-              "& .MuiPagination-ul": { gap: 1 },
-              "& .MuiPaginationItem-root": {
-                fontFamily: fontes.corpo,
-                fontWeight: 700,
-                color: cores.tinta,
-                backgroundColor: cores.papel,
-                border: retro.borda,
-                borderRadius: 2,
-                minWidth: 40,
-                height: 40,
-                "&:hover": { backgroundColor: cores.fundo },
-              },
-              "& .MuiPaginationItem-root.Mui-selected": {
-                backgroundColor: cores.mostarda,
-                boxShadow: retro.sombraLeve,
-                "&:hover": { backgroundColor: cores.mostardaEscura },
-              },
-              "& .MuiPaginationItem-ellipsis": { border: "none", backgroundColor: "transparent" },
-            }}
-          />
-        </Box>
-      )}
-
-      {carregandoMais && (
-        <Box sx={{ ...grade, display: { xs: "grid", sm: "none" } }}>
-          {Array.from({ length: 2 }, (_, i) => (
-            <CartaoLivroCarregando key={i} />
-          ))}
-        </Box>
-      )}
-
-      <Stack sx={{ display: { xs: "flex", sm: "none" }, alignItems: "center", gap: 1.5, pt: 1 }}>
-        {erroMais && (
-          <Typography role="alert" sx={{ fontFamily: fontes.corpo, fontSize: 14, color: cores.terracotaEscura, textAlign: "center" }}>
-            {erroMais}
-          </Typography>
-        )}
-        {temMais ? (
-          <BotaoRetro onClick={aoCarregarMais} disabled={carregandoMais} sx={{ width: "100%" }}>
-            {carregandoMais ? "Carregando..." : erroMais ? "Tentar carregar de novo" : "Carregar mais"}
-          </BotaoRetro>
-        ) : (
-          <Typography sx={{ fontFamily: fontes.corpo, fontSize: 14, color: cores.textoSuave }}>
-            Você chegou ao fim da lista.
-          </Typography>
-        )}
-      </Stack>
+      <PaginacaoResponsiva
+        pagina={pagina}
+        totalPaginas={lista.totalPaginas}
+        temMais={lista.temMais}
+        carregandoMais={lista.carregandoMais}
+        erroMais={lista.erroMais}
+        aoMudarPagina={aoMudarPagina}
+        aoCarregarMais={lista.carregarMais}
+      />
     </Stack>
   );
 }
