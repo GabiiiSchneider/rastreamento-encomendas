@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { Box, Link, Typography } from '@mui/material'
 
 import appCss from '../styles.css?url'
 import { cores, fontes, googleFontsUrl } from '../lib/tema'
@@ -16,7 +17,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Estante 📚',
+        title: 'Estante',
       },
     ],
     links: [
@@ -34,11 +35,14 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   notFoundComponent: () => (
-    <div style={{ textAlign: 'center', paddingTop: '20vh', minHeight: '100vh', fontFamily: fontes.corpo, backgroundColor: cores.fundo, color: cores.preto }}>
-      <div style={{ fontSize: 64 }}>📚</div>
-      <h2 style={{ fontFamily: fontes.titulo, color: cores.roxo }}>Ops! Essa página sumiu como livro emprestado</h2>
-      <a href="/" style={{ color: cores.roxo }}>Voltar para a estante</a>
-    </div>
+    <Box sx={{ textAlign: 'center', pt: '20vh', px: 2, minHeight: '100vh', backgroundColor: cores.fundo, color: cores.tinta }}>
+      <Typography sx={{ fontFamily: fontes.titulo, fontStyle: 'italic', fontSize: { xs: 28, md: 36 }, color: cores.terracota, mb: 2 }}>
+        Ops! Essa página sumiu como livro emprestado
+      </Typography>
+      <Link href="/" sx={{ fontFamily: fontes.corpo, color: cores.terracotaEscura, fontWeight: 700 }}>
+        Voltar para a estante
+      </Link>
+    </Box>
   ),
 })
 

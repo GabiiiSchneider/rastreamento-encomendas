@@ -1,24 +1,28 @@
 export const cores = {
-  roxo: "#7B4BD8",
-  roxoEscuro: "#6236BF",
-  rosa: "#F49AD8",
-  limao: "#D8F26A",
-  limaoEscuro: "#C4E04A",
-  preto: "#111111",
-  fundo: "#FCE9F4",
-  branco: "#FFFFFF",
-  cinza: "#BBBBBB",
-  campo: "#1C1C1C",
-  borda: "#333333",
-  pele: "#FBE3D6",
-  peleSombra: "#F2CDBB",
+  fundo: "#F6EEDC",
+  papel: "#FBF6EA",
+  tinta: "#2B1E1A",
+  tintaClara: "#3A2B25",
+  bordaEscura: "#5A463D",
+  terracota: "#C9473A",
+  terracotaEscura: "#A93A2F",
+  mostarda: "#F2C94C",
+  mostardaEscura: "#DDB233",
+  rosa: "#F4A7B4",
+  azul: "#A8C8DA",
+  textoSuave: "#6B5A50",
+  textoClaro: "#CDBFAE",
 };
 
 export const fontes = {
-  titulo: '"Rubik Dirt", "Fredoka", sans-serif',
-  corpo: '"Fredoka", sans-serif',
-  assinatura: '"Caveat", cursive',
+  titulo: '"Fraunces", Georgia, serif',
+  corpo: '"DM Sans", sans-serif',
+};
+export const retro = {
+  borda: `2px solid ${cores.tinta}`,
+  sombra: `5px 5px 0 ${cores.tinta}`,
+  sombraLeve: `3px 3px 0 ${cores.tinta}`,
 };
 
 export const googleFontsUrl =
-  "https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Fredoka:wght@400;600;700&family=Rubik+Dirt&display=swap";
+  "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600;1,9..144,700&display=swap";

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Box, Paper } from "@mui/material";
 import { cores } from "../lib/tema";
-import { FundoY2K } from "../components/FundoY2K";
+import { FundoPapel } from "../components/FundoPapel";
 import { PainelIlustrado } from "../components/PainelIlustrado";
 import { LoginBoasVindas } from "../features/livros/components/LoginBoasVindas";
 
@@ -23,7 +23,7 @@ function LoginPage() {
         backgroundColor: cores.fundo,
       }}
     >
-      <FundoY2K />
+      <FundoPapel />
 
       <Paper
         elevation={0}
@@ -32,8 +32,9 @@ function LoginPage() {
           width: "100%",
           maxWidth: 1100,
           minHeight: 600,
-          backgroundColor: cores.preto,
+          backgroundColor: cores.tinta,
           borderRadius: 8,
+          boxShadow: `8px 8px 0 ${cores.terracota}`,
           p: { xs: 3, md: 4 },
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },

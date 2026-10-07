@@ -7,7 +7,7 @@ export const livros: Livro[] = [
     titulo: 'Dom Casmurro',
     autor: 'Machado de Assis',
     ano: 1899,
-    capa: cores.roxo,
+    capa: cores.terracota,
   },
   {
     id: 'a-hora-da-estrela',
@@ -21,20 +21,20 @@ export const livros: Livro[] = [
     titulo: '1984',
     autor: 'George Orwell',
     ano: 1949,
-    capa: cores.preto,
+    capa: cores.tinta,
   },
   {
     id: 'orgulho-e-preconceito',
     titulo: 'Orgulho e Preconceito',
     autor: 'Jane Austen',
     ano: 1813,
-    capa: cores.limao,
+    capa: cores.mostarda,
   },
   {
     id: 'o-pequeno-principe',
     titulo: 'O Pequeno Príncipe',
     autor: 'Antoine de Saint-Exupéry',
     ano: 1943,
-    capa: cores.roxo,
+    capa: cores.azul,
   },
 ]
