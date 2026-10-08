@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AutenticadoRouteImport } from './routes/_autenticado'
+import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AutenticadoBuscarRouteImport } from './routes/_autenticado/buscar'
 import { Route as AutenticadoEstanteRouteImport } from './routes/_autenticado/estante'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AutenticadoRoute = AutenticadoRouteImport.update({
   id: '/_autenticado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -80,6 +86,7 @@ const AutenticadoUUsernameRoute = AutenticadoUUsernameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/buscar': typeof AutenticadoBuscarRoute
   '/estante': typeof AutenticadoEstanteRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/buscar': typeof AutenticadoBuscarRoute
   '/estante': typeof AutenticadoEstanteRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_autenticado': typeof AutenticadoRouteWithChildren
+  '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/_autenticado/buscar': typeof AutenticadoBuscarRoute
   '/_autenticado/estante': typeof AutenticadoEstanteRoute
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cadastro'
     | '/login'
     | '/buscar'
     | '/estante'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cadastro'
     | '/login'
     | '/buscar'
     | '/estante'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_autenticado'
+    | '/cadastro'
     | '/login'
     | '/_autenticado/buscar'
     | '/_autenticado/estante'
@@ -159,6 +171,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AutenticadoRoute: typeof AutenticadoRouteWithChildren
+  CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
 }
 
@@ -176,6 +189,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AutenticadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -273,6 +293,7 @@ const AutenticadoRouteWithChildren = AutenticadoRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AutenticadoRoute: AutenticadoRouteWithChildren,
+  CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport

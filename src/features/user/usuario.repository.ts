@@ -1,5 +1,11 @@
 import type { PrismaClient } from "../../generated/prisma/client";
-import type { CreateUserDto } from "./auth.dto";
+
+type DadosNovoUsuario = {
+    name: string;
+    username: string;
+    email: string;
+    passwordHash: string;
+};
 
 export class UsuarioRepository {
     private prisma: PrismaClient;
@@ -10,8 +16,22 @@ export class UsuarioRepository {
     findByEmail(email: string) {
         return this.prisma.user.findUnique({ where: {email}});
     }
-    create(data: CreateUserDto) {
-        return this.prisma.user.create({ data });
+    emailExists(email: string) {
+        return this.prisma.user.count({ where: { email } }).then((total) => total > 0);
+    }
+    usernameExists(username: string) {
+        return this.prisma.profile.count({ where: { username } }).then((total) => total > 0);
+    }
+    createWithProfile(dados: DadosNovoUsuario) {
+        return this.prisma.user.create({
+            data: {
+                name: dados.name,
+                email: dados.email,
+                password: dados.passwordHash,
+                profile: { create: { username: dados.username } },
+            },
+            select: { id: true },
+        });
     }
     findLoggedUser(id: string) {
         return this.prisma.user.findUnique({

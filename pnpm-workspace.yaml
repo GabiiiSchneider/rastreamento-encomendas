@@ -3,3 +3,4 @@ allowBuilds:
   esbuild: true
   lightningcss: true
   prisma: false
+  sharp: false

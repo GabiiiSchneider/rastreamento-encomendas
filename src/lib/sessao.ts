@@ -12,7 +12,7 @@ function segredoDaSessao() {
   const segredo = process.env.SESSION_SECRET;
   if (!segredo || segredo.length < TAMANHO_MINIMO_SEGREDO) {
     throw new Error(
-      `Defina SESSION_SECRET no .env com pelo menos ${TAMANHO_MINIMO_SEGREDO} caracteres (ex.: openssl rand -base64 48).`,
+      `Defina a variável de ambiente SESSION_SECRET com pelo menos ${TAMANHO_MINIMO_SEGREDO} caracteres (ex.: openssl rand -base64 48).`,
     );
   }
   return segredo;
@@ -25,7 +25,7 @@ export function usarSessao() {
     maxAge: TRINTA_DIAS_EM_SEGUNDOS,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: import.meta.env.PROD,
       sameSite: "lax",
       path: "/",
     },

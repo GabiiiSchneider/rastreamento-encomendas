@@ -47,29 +47,49 @@ function InicioPage() {
         <Typography sx={{ fontFamily: fontes.titulo, fontStyle: "italic", fontWeight: 600, fontSize: { xs: 22, md: 26 }, color: cores.rosa }}>
           estante ❦
         </Typography>
-        <Button
-          onClick={() => navigate({ to: "/login" })}
-          sx={{
-            px: { xs: 3, md: 4 },
-            py: 1,
-            borderRadius: 3,
-            backgroundColor: cores.mostarda,
-            color: cores.tinta,
-            boxShadow: `4px 4px 0 ${cores.terracota}`,
-            fontFamily: fontes.corpo,
-            fontWeight: 700,
-            fontSize: "1rem",
-            textTransform: "none",
-            transition: "transform 0.15s, box-shadow 0.15s",
-            "&:hover": {
-              backgroundColor: cores.mostardaEscura,
-              transform: "translate(-2px, -2px)",
-              boxShadow: `6px 6px 0 ${cores.terracota}`,
-            },
-          }}
-        >
-          Entrar
-        </Button>
+        <Stack direction="row" sx={{ gap: { xs: 1, sm: 1.5 }, alignItems: "center" }}>
+          <Button
+            onClick={() => navigate({ to: "/cadastro" })}
+            sx={{
+              px: { xs: 2, md: 3 },
+              py: 1,
+              borderRadius: 3,
+              border: `2px solid ${cores.rosa}`,
+              color: cores.rosa,
+              fontFamily: fontes.corpo,
+              fontWeight: 700,
+              fontSize: "1rem",
+              textTransform: "none",
+              whiteSpace: "nowrap",
+              "&:hover": { backgroundColor: cores.rosa, color: cores.tinta },
+            }}
+          >
+            Criar conta
+          </Button>
+          <Button
+            onClick={() => navigate({ to: "/login" })}
+            sx={{
+              px: { xs: 3, md: 4 },
+              py: 1,
+              borderRadius: 3,
+              backgroundColor: cores.mostarda,
+              color: cores.tinta,
+              boxShadow: `4px 4px 0 ${cores.terracota}`,
+              fontFamily: fontes.corpo,
+              fontWeight: 700,
+              fontSize: "1rem",
+              textTransform: "none",
+              transition: "transform 0.15s, box-shadow 0.15s",
+              "&:hover": {
+                backgroundColor: cores.mostardaEscura,
+                transform: "translate(-2px, -2px)",
+                boxShadow: `6px 6px 0 ${cores.terracota}`,
+              },
+            }}
+          >
+            Entrar
+          </Button>
+        </Stack>
       </Stack>
 
       <Stack
