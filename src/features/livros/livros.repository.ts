@@ -2,6 +2,16 @@ import type { PrismaClient } from "../../generated/prisma/client.ts";
 import type { ReadingStatus } from "../../generated/prisma/enums.ts";
 import type { LivroCatalogo } from "../../catalogo/catalogo.port.ts";
 
+type Periodo = {
+  inicio: Date;
+  fim: Date;
+};
+
+type FiltroEstante = {
+  status: ReadingStatus;
+  terminadosEm?: Periodo;
+};
+
 type DadosEstante = {
   userId: string;
   bookId: string;
@@ -52,6 +62,26 @@ export class LivrosRepository {
         finished_at: dados.finishedAt,
       },
     });
+  }
+
+  findUserBookByExternalId(userId: string, externalId: string) {
+    return this.prisma.userBook.findFirst({
+      where: { user_id: userId, book: { external_id: externalId } },
+      select: { status: true },
+    });
+  }
+
+  async findUserBooksPage(userId: string, filtro: FiltroEstante, skip: number, take: number) {
+    const where = {
+      user_id: userId,
+      status: filtro.status,
+      ...(filtro.terminadosEm && { finished_at: { gte: filtro.terminadosEm.inicio, lt: filtro.terminadosEm.fim } }),
+    };
+    const [itens, total] = await this.prisma.$transaction([
+      this.prisma.userBook.findMany({ where, include: { book: true }, orderBy: [{ updated_at: "desc" }, { id: "asc" }], skip, take }),
+      this.prisma.userBook.count({ where }),
+    ]);
+    return { itens, total };
   }
 
   findUserBooksByStatus(userId: string, status: ReadingStatus) {

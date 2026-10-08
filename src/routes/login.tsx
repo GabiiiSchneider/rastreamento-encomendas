@@ -1,11 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Box, Paper } from "@mui/material";
 import { cores } from "../lib/tema";
 import { FundoPapel } from "../components/FundoPapel";
 import { PainelIlustrado } from "../components/PainelIlustrado";
 import { LoginBoasVindas } from "../features/livros/components/LoginBoasVindas";
 
+type BuscaLogin = { redirect?: string };
+
+function destinoSeguro(valor: unknown) {
+  return typeof valor === "string" && valor.startsWith("/") && !valor.startsWith("//") ? valor : undefined;
+}
+
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): BuscaLogin => ({ redirect: destinoSeguro(search.redirect) }),
+  beforeLoad: ({ context, search }) => {
+    if (context.usuario) {
+      throw redirect({ href: search.redirect ?? "/home" });
+    }
+  },
   component: LoginPage,
 });
 

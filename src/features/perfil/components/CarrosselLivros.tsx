@@ -1,24 +1,21 @@
 import { useRef } from "react";
-import { Box, Chip, IconButton, Paper, Stack, Typography } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
+import { Box, Chip, IconButton, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { cores, fontes, retro } from "../../../lib/tema";
 import type { LivroNaEstante } from "../../livros/livros.types";
+import { estiloDoLivro } from "../../livros/components/estilosCapa";
+import { BotaoRetro } from "../../../components/BotaoRetro";
+import { IconeMais } from "../../../components/Icones";
 
 type Props = {
   livros: LivroNaEstante[];
+  publico?: boolean;
 };
-
-const estilosCartao = [
-  { fundo: cores.terracotaEscura, texto: cores.papel, chipFundo: cores.papel, chipTexto: cores.tinta },
-  { fundo: cores.mostarda, texto: cores.tinta, chipFundo: cores.tinta, chipTexto: cores.papel },
-  { fundo: cores.rosa, texto: cores.tinta, chipFundo: cores.papel, chipTexto: cores.tinta },
-  { fundo: cores.azul, texto: cores.tinta, chipFundo: cores.tinta, chipTexto: cores.papel },
-];
-
-const estiloComCapa = { fundo: cores.tinta, texto: cores.papel, chipFundo: cores.papel, chipTexto: cores.tinta };
 
 const LARGURA_CARTAO = 200;
 
-export function CarrosselLivros({ livros }: Props) {
+export function CarrosselLivros({ livros, publico = false }: Props) {
+  const navigate = useNavigate();
   const trilhoRef = useRef<HTMLDivElement>(null);
 
   function rolar(direcao: 1 | -1) {
@@ -47,20 +44,33 @@ export function CarrosselLivros({ livros }: Props) {
             As últimas histórias que passaram pela estante
           </Typography>
         </Box>
-        {livros.length > 0 && (
-          <Stack direction="row" sx={{ gap: 1 }}>
-            <IconButton aria-label="Voltar" onClick={() => rolar(-1)} sx={estiloSeta}>
-              ‹
-            </IconButton>
-            <IconButton aria-label="Avançar" onClick={() => rolar(1)} sx={estiloSeta}>
-              ›
-            </IconButton>
-          </Stack>
-        )}
+        <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {livros.length > 0 && (
+            <>
+              <IconButton aria-label="Voltar" onClick={() => rolar(-1)} sx={estiloSeta}>
+                ‹
+              </IconButton>
+              <IconButton aria-label="Avançar" onClick={() => rolar(1)} sx={estiloSeta}>
+                ›
+              </IconButton>
+              {!publico && (
+                <Tooltip title="Ver todos">
+                  <IconButton
+                    aria-label="Ver todos os livros lidos"
+                    onClick={() => navigate({ to: "/estante", search: { aba: "total-lidos" } })}
+                    sx={{ ...estiloSeta, backgroundColor: cores.mostarda, color: cores.tinta, border: retro.borda, "&:hover": { backgroundColor: cores.mostardaEscura } }}
+                  >
+                    <IconeMais sx={{ fontSize: 22 }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
+          )}
+        </Stack>
       </Stack>
 
       {livros.length === 0 ? (
-        <EstanteVazia />
+        <EstanteVazia aoAdicionar={publico ? undefined : () => navigate({ to: "/livros/buscar" })} />
       ) : (
         <Box
           ref={trilhoRef}
@@ -77,7 +87,7 @@ export function CarrosselLivros({ livros }: Props) {
           }}
         >
           {livros.map((livro, i) => {
-            const estilo = livro.capaUrl ? estiloComCapa : estilosCartao[i % estilosCartao.length];
+            const estilo = estiloDoLivro(livro.capaUrl, i);
             return (
               <Paper
                 key={livro.id}
@@ -150,7 +160,7 @@ export function CarrosselLivros({ livros }: Props) {
   );
 }
 
-function EstanteVazia() {
+function EstanteVazia({ aoAdicionar }: { aoAdicionar?: () => void }) {
   return (
     <Paper
       elevation={0}
@@ -167,8 +177,13 @@ function EstanteVazia() {
         Nenhum livro lido por aqui ainda
       </Typography>
       <Typography sx={{ fontFamily: fontes.corpo, fontSize: 15, color: cores.textoSuave, mt: 1 }}>
-        Quando você terminar uma leitura, ela aparece nesta estante.
+        {aoAdicionar ? "Quando você terminar uma leitura, ela aparece nesta estante." : "Quando este leitor terminar uma leitura, ela aparece aqui."}
       </Typography>
+      {aoAdicionar && (
+        <BotaoRetro onClick={aoAdicionar} sx={{ mt: 3 }}>
+          + Adicionar livro
+        </BotaoRetro>
+      )}
     </Paper>
   );
 }

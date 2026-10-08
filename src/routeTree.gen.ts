@@ -10,18 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as HomeRouteImport } from './routes/home'
+import { Route as AutenticadoRouteImport } from './routes/_autenticado'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as AutenticadoBuscarRouteImport } from './routes/_autenticado/buscar'
+import { Route as AutenticadoEstanteRouteImport } from './routes/_autenticado/estante'
+import { Route as AutenticadoHomeRouteImport } from './routes/_autenticado/home'
+import { Route as AutenticadoPerfilRouteImport } from './routes/_autenticado/perfil'
+import { Route as AutenticadoAutoresAutorIdRouteImport } from './routes/_autenticado/autores/$autorId'
+import { Route as AutenticadoLivrosLivroIdRouteImport } from './routes/_autenticado/livros/$livroId'
+import { Route as AutenticadoLivrosBuscarRouteImport } from './routes/_autenticado/livros/buscar'
+import { Route as AutenticadoUUsernameRouteImport } from './routes/_autenticado/u/$username'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
+const AutenticadoRoute = AutenticadoRouteImport.update({
+  id: '/_autenticado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -29,44 +35,131 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilRoute = PerfilRouteImport.update({
+const AutenticadoBuscarRoute = AutenticadoBuscarRouteImport.update({
+  id: '/buscar',
+  path: '/buscar',
+  getParentRoute: () => AutenticadoRoute,
+} as any)
+const AutenticadoEstanteRoute = AutenticadoEstanteRouteImport.update({
+  id: '/estante',
+  path: '/estante',
+  getParentRoute: () => AutenticadoRoute,
+} as any)
+const AutenticadoHomeRoute = AutenticadoHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AutenticadoRoute,
+} as any)
+const AutenticadoPerfilRoute = AutenticadoPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AutenticadoRoute,
+} as any)
+const AutenticadoAutoresAutorIdRoute =
+  AutenticadoAutoresAutorIdRouteImport.update({
+    id: '/autores/$autorId',
+    path: '/autores/$autorId',
+    getParentRoute: () => AutenticadoRoute,
+  } as any)
+const AutenticadoLivrosLivroIdRoute =
+  AutenticadoLivrosLivroIdRouteImport.update({
+    id: '/livros/$livroId',
+    path: '/livros/$livroId',
+    getParentRoute: () => AutenticadoRoute,
+  } as any)
+const AutenticadoLivrosBuscarRoute = AutenticadoLivrosBuscarRouteImport.update({
+  id: '/livros/buscar',
+  path: '/livros/buscar',
+  getParentRoute: () => AutenticadoRoute,
+} as any)
+const AutenticadoUUsernameRoute = AutenticadoUUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => AutenticadoRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
   '/login': typeof LoginRoute
-  '/perfil': typeof PerfilRoute
+  '/buscar': typeof AutenticadoBuscarRoute
+  '/estante': typeof AutenticadoEstanteRoute
+  '/home': typeof AutenticadoHomeRoute
+  '/perfil': typeof AutenticadoPerfilRoute
+  '/autores/$autorId': typeof AutenticadoAutoresAutorIdRoute
+  '/livros/$livroId': typeof AutenticadoLivrosLivroIdRoute
+  '/livros/buscar': typeof AutenticadoLivrosBuscarRoute
+  '/u/$username': typeof AutenticadoUUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
   '/login': typeof LoginRoute
-  '/perfil': typeof PerfilRoute
+  '/buscar': typeof AutenticadoBuscarRoute
+  '/estante': typeof AutenticadoEstanteRoute
+  '/home': typeof AutenticadoHomeRoute
+  '/perfil': typeof AutenticadoPerfilRoute
+  '/autores/$autorId': typeof AutenticadoAutoresAutorIdRoute
+  '/livros/$livroId': typeof AutenticadoLivrosLivroIdRoute
+  '/livros/buscar': typeof AutenticadoLivrosBuscarRoute
+  '/u/$username': typeof AutenticadoUUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
+  '/_autenticado': typeof AutenticadoRouteWithChildren
   '/login': typeof LoginRoute
-  '/perfil': typeof PerfilRoute
+  '/_autenticado/buscar': typeof AutenticadoBuscarRoute
+  '/_autenticado/estante': typeof AutenticadoEstanteRoute
+  '/_autenticado/home': typeof AutenticadoHomeRoute
+  '/_autenticado/perfil': typeof AutenticadoPerfilRoute
+  '/_autenticado/autores/$autorId': typeof AutenticadoAutoresAutorIdRoute
+  '/_autenticado/livros/$livroId': typeof AutenticadoLivrosLivroIdRoute
+  '/_autenticado/livros/buscar': typeof AutenticadoLivrosBuscarRoute
+  '/_autenticado/u/$username': typeof AutenticadoUUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/home' | '/login' | '/perfil'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/buscar'
+    | '/estante'
+    | '/home'
+    | '/perfil'
+    | '/autores/$autorId'
+    | '/livros/$livroId'
+    | '/livros/buscar'
+    | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/home' | '/login' | '/perfil'
-  id: '__root__' | '/' | '/home' | '/login' | '/perfil'
+  to:
+    | '/'
+    | '/login'
+    | '/buscar'
+    | '/estante'
+    | '/home'
+    | '/perfil'
+    | '/autores/$autorId'
+    | '/livros/$livroId'
+    | '/livros/buscar'
+    | '/u/$username'
+  id:
+    | '__root__'
+    | '/'
+    | '/_autenticado'
+    | '/login'
+    | '/_autenticado/buscar'
+    | '/_autenticado/estante'
+    | '/_autenticado/home'
+    | '/_autenticado/perfil'
+    | '/_autenticado/autores/$autorId'
+    | '/_autenticado/livros/$livroId'
+    | '/_autenticado/livros/buscar'
+    | '/_autenticado/u/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  HomeRoute: typeof HomeRoute
+  AutenticadoRoute: typeof AutenticadoRouteWithChildren
   LoginRoute: typeof LoginRoute
-  PerfilRoute: typeof PerfilRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -78,11 +171,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
+    '/_autenticado': {
+      id: '/_autenticado'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AutenticadoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -92,21 +185,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil': {
-      id: '/perfil'
+    '/_autenticado/buscar': {
+      id: '/_autenticado/buscar'
+      path: '/buscar'
+      fullPath: '/buscar'
+      preLoaderRoute: typeof AutenticadoBuscarRouteImport
+      parentRoute: typeof AutenticadoRoute
+    }
+    '/_autenticado/estante': {
+      id: '/_autenticado/estante'
+      path: '/estante'
+      fullPath: '/estante'
+      preLoaderRoute: typeof AutenticadoEstanteRouteImport
+      parentRoute: typeof AutenticadoRoute
+    }
+    '/_autenticado/home': {
+      id: '/_autenticado/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AutenticadoHomeRouteImport
+      parentRoute: typeof AutenticadoRoute
+    }
+    '/_autenticado/perfil': {
+      id: '/_autenticado/perfil'
       path: '/perfil'
       fullPath: '/perfil'
-      preLoaderRoute: typeof PerfilRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AutenticadoPerfilRouteImport
+      parentRoute: typeof AutenticadoRoute
+    }
+    '/_autenticado/autores/$autorId': {
+      id: '/_autenticado/autores/$autorId'
+      path: '/autores/$autorId'
+      fullPath: '/autores/$autorId'
+      preLoaderRoute: typeof AutenticadoAutoresAutorIdRouteImport
+      parentRoute: typeof AutenticadoRoute
+    }
+    '/_autenticado/livros/$livroId': {
+      id: '/_autenticado/livros/$livroId'
+      path: '/livros/$livroId'
+      fullPath: '/livros/$livroId'
+      preLoaderRoute: typeof AutenticadoLivrosLivroIdRouteImport
+      parentRoute: typeof AutenticadoRoute
+    }
+    '/_autenticado/livros/buscar': {
+      id: '/_autenticado/livros/buscar'
+      path: '/livros/buscar'
+      fullPath: '/livros/buscar'
+      preLoaderRoute: typeof AutenticadoLivrosBuscarRouteImport
+      parentRoute: typeof AutenticadoRoute
+    }
+    '/_autenticado/u/$username': {
+      id: '/_autenticado/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof AutenticadoUUsernameRouteImport
+      parentRoute: typeof AutenticadoRoute
     }
   }
 }
 
+interface AutenticadoRouteChildren {
+  AutenticadoBuscarRoute: typeof AutenticadoBuscarRoute
+  AutenticadoEstanteRoute: typeof AutenticadoEstanteRoute
+  AutenticadoHomeRoute: typeof AutenticadoHomeRoute
+  AutenticadoPerfilRoute: typeof AutenticadoPerfilRoute
+  AutenticadoAutoresAutorIdRoute: typeof AutenticadoAutoresAutorIdRoute
+  AutenticadoLivrosLivroIdRoute: typeof AutenticadoLivrosLivroIdRoute
+  AutenticadoLivrosBuscarRoute: typeof AutenticadoLivrosBuscarRoute
+  AutenticadoUUsernameRoute: typeof AutenticadoUUsernameRoute
+}
+
+const AutenticadoRouteChildren: AutenticadoRouteChildren = {
+  AutenticadoBuscarRoute: AutenticadoBuscarRoute,
+  AutenticadoEstanteRoute: AutenticadoEstanteRoute,
+  AutenticadoHomeRoute: AutenticadoHomeRoute,
+  AutenticadoPerfilRoute: AutenticadoPerfilRoute,
+  AutenticadoAutoresAutorIdRoute: AutenticadoAutoresAutorIdRoute,
+  AutenticadoLivrosLivroIdRoute: AutenticadoLivrosLivroIdRoute,
+  AutenticadoLivrosBuscarRoute: AutenticadoLivrosBuscarRoute,
+  AutenticadoUUsernameRoute: AutenticadoUUsernameRoute,
+}
+
+const AutenticadoRouteWithChildren = AutenticadoRoute._addFileChildren(
+  AutenticadoRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  HomeRoute: HomeRoute,
+  AutenticadoRoute: AutenticadoRouteWithChildren,
   LoginRoute: LoginRoute,
-  PerfilRoute: PerfilRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

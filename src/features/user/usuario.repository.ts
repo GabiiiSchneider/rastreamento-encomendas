@@ -13,4 +13,10 @@ export class UsuarioRepository {
     create(data: CreateUserDto) {
         return this.prisma.user.create({ data });
     }
+    findLoggedUser(id: string) {
+        return this.prisma.user.findUnique({
+            where: { id },
+            select: { id: true, name: true, profile: { select: { username: true, avatar_url: true } } },
+        });
+    }
 }

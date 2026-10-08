@@ -5,8 +5,16 @@ import { Box, Link, Typography } from '@mui/material'
 
 import appCss from '../styles.css?url'
 import { cores, fontes, googleFontsUrl } from '../lib/tema'
+import { obterUsuarioLogado } from '../features/user/auth.functions'
 
 export const Route = createRootRoute({
+  beforeLoad: async () => {
+    try {
+      return { usuario: await obterUsuarioLogado() }
+    } catch {
+      return { usuario: null }
+    }
+  },
   head: () => ({
     meta: [
       {
