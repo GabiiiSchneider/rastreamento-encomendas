@@ -7,7 +7,7 @@ export type BuscaLivros = {
 
 // a página do livro também guarda de onde a pessoa veio, para o "voltar" levar ao lugar certo
 export type BuscaLivro = BuscaLivros & {
-  de?: "estante" | "autor";
+  de?: "estante" | "autor" | "pesquisa";
   aba?: AbaEstante;
   autor?: string;
 };
@@ -31,6 +31,10 @@ export function validarBuscaLivro(search: Record<string, unknown>): BuscaLivro {
   }
   if (search.de === "autor" && typeof search.autor === "string" && FORMATO_AUTOR_ID.test(search.autor)) {
     return { de: "autor", autor: search.autor };
+  }
+  if (search.de === "pesquisa") {
+    const { q } = validarBuscaLivros(search);
+    return { de: "pesquisa", q };
   }
   return validarBuscaLivros(search);
 }

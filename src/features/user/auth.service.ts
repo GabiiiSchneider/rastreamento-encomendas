@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { UsuarioRepository } from "./usuario.repository";
 import type { CreateUserDto, LoginDto } from "./auth.dto";
+import type { UsuarioLogado } from "./usuario.types";
 
 export class AuthService {
   private repository: UsuarioRepository;
@@ -31,5 +32,16 @@ export class AuthService {
     }
     const { password: _, ...usuarioSemSenha } = user;
     return usuarioSemSenha;
+  }
+
+  async obterUsuarioLogado(userId: string): Promise<UsuarioLogado | null> {
+    const usuario = await this.repository.findLoggedUser(userId);
+    if (!usuario) return null;
+    return {
+      id: usuario.id,
+      nome: usuario.name,
+      username: usuario.profile?.username ?? null,
+      avatarUrl: usuario.profile?.avatar_url ?? null,
+    };
   }
 }

@@ -18,6 +18,10 @@ export class AutoresService {
     return { ...autor, biografia };
   }
 
+  buscar(termo: string, pagina = 1, limite?: number) {
+    return this.catalogo.buscarAutores(termo, pagina, limite);
+  }
+
   listarLivros(autorId: string, pagina = 1, idioma?: string, limite?: number) {
     return this.catalogo.buscarLivrosDoAutor(autorId, pagina, idioma, limite);
   }

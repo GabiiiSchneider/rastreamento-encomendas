@@ -30,6 +30,24 @@ export class PerfilRepository {
     });
   }
 
+  countFollowers(userId: string) {
+    return this.prisma.follow.count({ where: { following_id: userId } });
+  }
+
+  countFollowing(userId: string) {
+    return this.prisma.follow.count({ where: { follower_id: userId } });
+  }
+
+  countReviews(userId: string) {
+    return this.prisma.review.count({ where: { user_id: userId } });
+  }
+
+  isFollowing(followerId: string, followingId: string) {
+    return this.prisma.follow
+      .count({ where: { follower_id: followerId, following_id: followingId } })
+      .then((total) => total > 0);
+  }
+
   findProfileByUsername(username: string) {
     return this.prisma.profile.findUnique({ where: { username }, select: { user_id: true } });
   }

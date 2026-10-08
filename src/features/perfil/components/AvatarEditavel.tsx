@@ -161,7 +161,7 @@ export function AvatarEditavel({ nome, avatarUrl, aoSalvar, aoAvisar }: Props) {
   );
 }
 
-function FotoPerfil({ nome, src, tamanho = 112 }: { nome: string; src: string | null; tamanho?: number }) {
+export function FotoPerfil({ nome, src, tamanho = 112 }: { nome: string; src: string | null; tamanho?: number }) {
   return (
     <Avatar
       src={src ?? undefined}

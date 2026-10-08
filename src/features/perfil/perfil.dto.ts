@@ -27,3 +27,9 @@ export class SalvarAvatarDto {
   @MaxLength(TAMANHO_MAXIMO_AVATAR)
   avatarUrl: string;
 }
+
+export class ObterPerfilPublicoDto {
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+}

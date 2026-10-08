@@ -21,9 +21,14 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  profile Profile?
-  books   UserBook[]
-  goals   ReadingGoal[]
+  profile         Profile?
+  books           UserBook[]
+  goals           ReadingGoal[]
+  reviews         Review[]
+  review_likes    ReviewLike[]
+  review_comments ReviewComment[]
+  following       Follow[]        @relation("Seguidor")
+  followers       Follow[]        @relation("Seguido")
 }
 
 model Profile {
@@ -60,7 +65,8 @@ model Book {
   published_at Int?
   created_at   DateTime @default(now())
 
-  users UserBook[]
+  users   UserBook[]
+  reviews Review[]
 }
 
 model UserBook {
@@ -89,4 +95,61 @@ model ReadingGoal {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, year])
+}
+
+model Review {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  user_id     String   @db.VarChar(36)
+  book_id     String   @db.VarChar(36)
+  content     String   @db.VarChar(1000)
+  rating      Int?
+  has_spoiler Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user     User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  book     Book            @relation(fields: [book_id], references: [id], onDelete: Cascade)
+  likes    ReviewLike[]
+  comments ReviewComment[]
+
+  @@index([created_at, id])
+  @@index([user_id, created_at])
+  @@index([book_id])
+}
+
+model ReviewLike {
+  user_id    String   @db.VarChar(36)
+  review_id  String   @db.VarChar(36)
+  created_at DateTime @default(now())
+
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  review Review @relation(fields: [review_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, review_id])
+  @@index([review_id])
+}
+
+model ReviewComment {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  review_id  String   @db.VarChar(36)
+  user_id    String   @db.VarChar(36)
+  content    String   @db.VarChar(500)
+  created_at DateTime @default(now())
+
+  review Review @relation(fields: [review_id], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([review_id, created_at])
+}
+
+model Follow {
+  follower_id  String   @db.VarChar(36)
+  following_id String   @db.VarChar(36)
+  created_at   DateTime @default(now())
+
+  follower  User @relation("Seguidor", fields: [follower_id], references: [id], onDelete: Cascade)
+  following User @relation("Seguido", fields: [following_id], references: [id], onDelete: Cascade)
+
+  @@id([follower_id, following_id])
+  @@index([following_id])
 }

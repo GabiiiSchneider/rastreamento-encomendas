@@ -2,19 +2,19 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Box, InputBase, Paper, Stack, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { PaginaComCard } from "../../components/PaginaComCard";
-import { BotaoRetro } from "../../components/BotaoRetro";
-import { cores, fontes, retro } from "../../lib/tema";
-import type { LivroCatalogo } from "../../catalogo/catalogo.port";
-import { buscarLivros } from "../../features/livros/livros.functions";
-import { validarBuscaLivros } from "../../features/livros/livros.busca";
-import { useListaPaginada, type EstadoLista } from "../../features/livros/useListaPaginada";
-import { CartaoLivroBusca } from "../../features/livros/components/CartaoLivroBusca";
-import { GradeCarregando, gradeLivros } from "../../features/livros/components/GradeLivros";
-import { PaginacaoResponsiva } from "../../features/livros/components/PaginacaoResponsiva";
-import { MensagemEstado } from "../../features/livros/components/MensagemEstado";
+import { PaginaComCard } from "../../../components/PaginaComCard";
+import { BotaoRetro } from "../../../components/BotaoRetro";
+import { cores, fontes, retro } from "../../../lib/tema";
+import type { LivroCatalogo } from "../../../catalogo/catalogo.port";
+import { buscarLivros } from "../../../features/livros/livros.functions";
+import { validarBuscaLivros } from "../../../features/livros/livros.busca";
+import { useListaPaginada, type EstadoLista } from "../../../features/livros/useListaPaginada";
+import { CartaoLivroBusca } from "../../../features/livros/components/CartaoLivroBusca";
+import { GradeCarregando, gradeLivros } from "../../../features/livros/components/GradeLivros";
+import { PaginacaoResponsiva } from "../../../features/livros/components/PaginacaoResponsiva";
+import { MensagemEstado } from "../../../features/livros/components/MensagemEstado";
 
-export const Route = createFileRoute("/livros/buscar")({
+export const Route = createFileRoute("/_autenticado/livros/buscar")({
   validateSearch: validarBuscaLivros,
   component: BuscarLivrosPage,
 });

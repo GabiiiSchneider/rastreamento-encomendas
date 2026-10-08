@@ -4,13 +4,14 @@ import { cores, fontes, retro } from "../../../lib/tema";
 type Props = {
   bio: string | null;
   generoFavorito: string | null;
+  titulo?: string;
 };
 
-export function SobreUsuario({ bio, generoFavorito }: Props) {
+export function SobreUsuario({ bio, generoFavorito, titulo = "Sobre mim" }: Props) {
   return (
     <Paper elevation={0} sx={{ backgroundColor: cores.fundo, border: retro.borda, borderRadius: 5, p: 3 }}>
       <Typography sx={{ fontFamily: fontes.titulo, fontStyle: "italic", fontWeight: 600, fontSize: 28, color: cores.tinta, lineHeight: 1.1, mb: 1.5 }}>
-        Sobre mim
+        {titulo}
       </Typography>
       <Typography sx={{ fontFamily: fontes.corpo, fontSize: 16, color: bio ? cores.tinta : cores.textoSuave, lineHeight: 1.6 }}>
         {bio ?? "Ainda não há nada escrito por aqui."}

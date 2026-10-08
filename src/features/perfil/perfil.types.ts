@@ -20,13 +20,20 @@ export interface PerfilUsuario {
   generoFavorito: string | null;
   avatarUrl: string | null;
   estatisticas: EstatisticasLeitura;
+  social: EstatisticasSociais;
   meta: MetaLeitura | null;
 }
 
-// o mínimo que o Header precisa para mostrar o avatar
-export interface ResumoUsuario {
-  nome: string;
-  avatarUrl: string | null;
+export interface EstatisticasSociais {
+  seguidores: number;
+  seguindo: number;
+  resenhas: number;
+}
+
+export interface PerfilPublico extends PerfilUsuario {
+  id: string;
+  usuario: string;
+  euSigo: boolean;
 }
 
 export type ResultadoEdicao = { ok: true } | { ok: false; erros: ErrosPerfil; mensagem?: string };

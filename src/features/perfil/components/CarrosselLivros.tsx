@@ -9,11 +9,12 @@ import { IconeMais } from "../../../components/Icones";
 
 type Props = {
   livros: LivroNaEstante[];
+  publico?: boolean;
 };
 
 const LARGURA_CARTAO = 200;
 
-export function CarrosselLivros({ livros }: Props) {
+export function CarrosselLivros({ livros, publico = false }: Props) {
   const navigate = useNavigate();
   const trilhoRef = useRef<HTMLDivElement>(null);
 
@@ -52,22 +53,24 @@ export function CarrosselLivros({ livros }: Props) {
               <IconButton aria-label="Avançar" onClick={() => rolar(1)} sx={estiloSeta}>
                 ›
               </IconButton>
-              <Tooltip title="Ver todos">
-                <IconButton
-                  aria-label="Ver todos os livros lidos"
-                  onClick={() => navigate({ to: "/estante", search: { aba: "total-lidos" } })}
-                  sx={{ ...estiloSeta, backgroundColor: cores.mostarda, color: cores.tinta, border: retro.borda, "&:hover": { backgroundColor: cores.mostardaEscura } }}
-                >
-                  <IconeMais sx={{ fontSize: 22 }} />
-                </IconButton>
-              </Tooltip>
+              {!publico && (
+                <Tooltip title="Ver todos">
+                  <IconButton
+                    aria-label="Ver todos os livros lidos"
+                    onClick={() => navigate({ to: "/estante", search: { aba: "total-lidos" } })}
+                    sx={{ ...estiloSeta, backgroundColor: cores.mostarda, color: cores.tinta, border: retro.borda, "&:hover": { backgroundColor: cores.mostardaEscura } }}
+                  >
+                    <IconeMais sx={{ fontSize: 22 }} />
+                  </IconButton>
+                </Tooltip>
+              )}
             </>
           )}
         </Stack>
       </Stack>
 
       {livros.length === 0 ? (
-        <EstanteVazia aoAdicionar={() => navigate({ to: "/livros/buscar" })} />
+        <EstanteVazia aoAdicionar={publico ? undefined : () => navigate({ to: "/livros/buscar" })} />
       ) : (
         <Box
           ref={trilhoRef}
@@ -157,7 +160,7 @@ export function CarrosselLivros({ livros }: Props) {
   );
 }
 
-function EstanteVazia({ aoAdicionar }: { aoAdicionar: () => void }) {
+function EstanteVazia({ aoAdicionar }: { aoAdicionar?: () => void }) {
   return (
     <Paper
       elevation={0}
@@ -174,11 +177,13 @@ function EstanteVazia({ aoAdicionar }: { aoAdicionar: () => void }) {
         Nenhum livro lido por aqui ainda
       </Typography>
       <Typography sx={{ fontFamily: fontes.corpo, fontSize: 15, color: cores.textoSuave, mt: 1 }}>
-        Quando você terminar uma leitura, ela aparece nesta estante.
+        {aoAdicionar ? "Quando você terminar uma leitura, ela aparece nesta estante." : "Quando este leitor terminar uma leitura, ela aparece aqui."}
       </Typography>
-      <BotaoRetro onClick={aoAdicionar} sx={{ mt: 3 }}>
-        + Adicionar livro
-      </BotaoRetro>
+      {aoAdicionar && (
+        <BotaoRetro onClick={aoAdicionar} sx={{ mt: 3 }}>
+          + Adicionar livro
+        </BotaoRetro>
+      )}
     </Paper>
   );
 }

@@ -5,18 +5,16 @@ import { Box, Link, Typography } from '@mui/material'
 
 import appCss from '../styles.css?url'
 import { cores, fontes, googleFontsUrl } from '../lib/tema'
-import { obterResumoUsuario } from '../features/perfil/perfil.functions'
+import { obterUsuarioLogado } from '../features/user/auth.functions'
 
 export const Route = createRootRoute({
-  // nome e foto do usuário para o Header; o perfil chama router.invalidate() depois de editar
-  loader: async () => {
+  beforeLoad: async () => {
     try {
-      return { usuario: await obterResumoUsuario() }
+      return { usuario: await obterUsuarioLogado() }
     } catch {
       return { usuario: null }
     }
   },
-  staleTime: Infinity,
   head: () => ({
     meta: [
       {

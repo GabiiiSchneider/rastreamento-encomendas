@@ -1,18 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Box, Stack, Tab, Tabs, Typography } from "@mui/material";
-import { PaginaComCard } from "../components/PaginaComCard";
-import { BotaoRetro } from "../components/BotaoRetro";
-import { cores, fontes, retro } from "../lib/tema";
-import type { LivroNaEstante } from "../features/livros/livros.types";
-import { listarEstantePaginada } from "../features/livros/livros.functions";
-import { ABAS_ESTANTE, ABA_PADRAO, dadosDaAba, validarBuscaEstante, type AbaEstante } from "../features/livros/livros.estante";
-import { useListaPaginada } from "../features/livros/useListaPaginada";
-import { CartaoLivroBusca } from "../features/livros/components/CartaoLivroBusca";
-import { GradeCarregando, gradeLivros } from "../features/livros/components/GradeLivros";
-import { PaginacaoResponsiva } from "../features/livros/components/PaginacaoResponsiva";
-import { MensagemEstado } from "../features/livros/components/MensagemEstado";
+import { PaginaComCard } from "../../components/PaginaComCard";
+import { BotaoRetro } from "../../components/BotaoRetro";
+import { cores, fontes, retro } from "../../lib/tema";
+import type { LivroNaEstante } from "../../features/livros/livros.types";
+import { listarEstantePaginada } from "../../features/livros/livros.functions";
+import { ABAS_ESTANTE, ABA_PADRAO, dadosDaAba, validarBuscaEstante, type AbaEstante } from "../../features/livros/livros.estante";
+import { useListaPaginada } from "../../features/livros/useListaPaginada";
+import { CartaoLivroBusca } from "../../features/livros/components/CartaoLivroBusca";
+import { GradeCarregando, gradeLivros } from "../../features/livros/components/GradeLivros";
+import { PaginacaoResponsiva } from "../../features/livros/components/PaginacaoResponsiva";
+import { MensagemEstado } from "../../features/livros/components/MensagemEstado";
 
-export const Route = createFileRoute("/estante")({
+export const Route = createFileRoute("/_autenticado/estante")({
   validateSearch: validarBuscaEstante,
   component: EstantePage,
 });
