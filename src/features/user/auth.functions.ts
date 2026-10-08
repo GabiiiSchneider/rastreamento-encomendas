@@ -7,7 +7,12 @@ import { comUsuario } from "../../lib/autenticacao";
 export const cadastrarUsuario = createServerFn({ method: "POST" })
   .validator((data: CreateUserDto) => data)
   .handler(async ({ data }) => {
-    return authService.cadastrar(data);
+    const resultado = await authService.cadastrar(data);
+    if (!resultado.ok) return resultado;
+
+    const sessao = await usarSessao();
+    await sessao.update({ userId: resultado.userId });
+    return { ok: true as const, usuario: await authService.obterUsuarioLogado(resultado.userId) };
   });
 
 export const loginUsuario = createServerFn({ method: "POST" })

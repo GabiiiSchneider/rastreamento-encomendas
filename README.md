@@ -1,183 +1,89 @@
-Welcome to your new TanStack Start app!
+# Estante
 
-# Getting Started
+Rede social para leitores: guarde o que você leu, está lendo e quer ler, escreva resenhas, siga amigos e descubra livros pela [Open Library](https://openlibrary.org).
 
-To run this application:
+Feito com TanStack Start, React, MUI, Prisma 7 e PostgreSQL.
 
-```bash
-pnpm install
-pnpm dev
-```
+## Rodando no computador
 
-# Building For Production
+Pré-requisitos: Node 22, pnpm e um PostgreSQL (local ou no Neon).
 
-To build this application for production:
+1. Instale as dependências:
 
-```bash
-pnpm build
-```
+   ```bash
+   pnpm install
+   ```
 
-## Styling
+2. Crie o arquivo `.env` a partir do exemplo e preencha as duas variáveis:
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+   ```bash
+   cp .env.example .env
+   ```
 
-### Removing Tailwind CSS
+   - `DATABASE_URL`: a conexão com o seu PostgreSQL.
+   - `SESSION_SECRET`: uma senha aleatória com pelo menos 32 caracteres. Para gerar:
 
-If you prefer not to use Tailwind CSS:
+     ```bash
+     openssl rand -base64 48
+     ```
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
+3. Crie as tabelas e gere o Prisma Client:
 
+   ```bash
+   pnpm prisma migrate deploy --config prisma7.config.ts
+   pnpm prisma generate --config prisma7.config.ts
+   ```
 
+4. Suba o servidor em http://localhost:3000:
 
-## Routing
+   ```bash
+   pnpm dev
+   ```
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
+Para conferir os tipos, rode `pnpm tsc --noEmit`.
 
-### Adding A Route
+## Deploy
 
-To add a new route to your application just add a new file in the `./src/routes` directory.
+O site roda de graça na **Netlify**, com o banco PostgreSQL no **Neon**. As páginas renderizadas no servidor e as server functions viram funções serverless da Netlify, por meio do plugin oficial `@netlify/vite-plugin-tanstack-start`, que já está configurado no `vite.config.ts`.
 
-TanStack will automatically generate the content of the route file for you.
+### 1. Banco no Neon
 
-Now that you have two routes you can use a `Link` component to navigate between them.
+1. Crie um projeto em [neon.tech](https://neon.tech).
+2. Em **Connect**, copie as duas strings de conexão:
+   - **com pooling** (o host termina em `-pooler`): é a que o site usa na Netlify, porque as funções serverless abrem muitas conexões curtas;
+   - **direta** (sem `-pooler`): use só para aplicar as migrations.
+3. Aplique as migrations a partir do seu computador, passando a URL **direta** no próprio comando. Assim você não precisa trocar o seu `.env`:
 
-### Adding Links
+   ```bash
+   DATABASE_URL="postgresql://USUARIO:SENHA@HOST-DIRETO.neon.tech/BANCO?sslmode=require" pnpm prisma migrate deploy --config prisma7.config.ts
+   ```
 
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
+   Rode esse comando de novo sempre que uma migration nova for criada.
 
-```tsx
-import { Link } from "@tanstack/react-router";
-```
+### 2. Site na Netlify
 
-Then anywhere in your JSX you can use it like so:
+1. Envie o projeto para o GitHub. As pastas `src/generated` e `.env` ficam de fora, pelo `.gitignore`.
+2. Na Netlify, use **Add new project → Import an existing project** e escolha o repositório. As configurações de build vêm do `netlify.toml`:
+   - comando: `pnpm build`, que roda `prisma generate` e depois `vite build`;
+   - pasta publicada: `dist/client`;
+   - Node 22.
+3. Em **Project configuration → Environment variables**, cadastre:
 
-```tsx
-<Link to="/about">About</Link>
-```
+   | Variável | Valor |
+   |---|---|
+   | `DATABASE_URL` | a string do Neon **com pooling** (host com `-pooler`), terminando em `?sslmode=require` |
+   | `SESSION_SECRET` | uma senha nova, gerada com `openssl rand -base64 48` (não reaproveite a do seu computador) |
 
-This will create a link that will navigate to the `/about` route.
+4. Faça o deploy. Se você mudar as variáveis depois, rode **Trigger deploy** para valer.
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+### Como funciona em produção
 
-### Using A Layout
+- **Sessão:** o cookie `estante_sessao` é `httpOnly` e, no build de produção, também `secure`, ou seja, só trafega por HTTPS. No `pnpm dev` ele não é `secure`, para funcionar em `http://localhost`.
+- **Banco:** o Prisma usa o adapter `pg` com um pool pequeno (até 5 conexões por função). O SSL do Neon vem do `sslmode=require` na URL.
+- **Prisma Client:** é gerado no início de cada build, porque `src/generated` não vai para o GitHub.
 
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
+### Problemas comuns
 
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+- **"Defina a variável de ambiente SESSION_SECRET..."**: a variável não foi cadastrada na Netlify ou tem menos de 32 caracteres.
+- **Erro de conexão com o banco**: confira se a `DATABASE_URL` da Netlify é a URL **com pooling** e termina em `?sslmode=require`.
+- **"relation ... does not exist"**: as migrations não foram aplicadas no Neon. Rode o comando do passo 1.3.

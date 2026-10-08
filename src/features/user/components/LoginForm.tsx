@@ -2,21 +2,7 @@ import { useState } from "react";
 import { useRouter, useSearch } from "@tanstack/react-router";
 import { Box, TextField, Button, Alert } from "@mui/material";
 import { loginUsuario } from "../auth.functions";
-import { cores, fontes } from "../../../lib/tema";
-
-const campoEscuro = {
-  "& .MuiOutlinedInput-root": {
-    color: cores.papel,
-    fontFamily: fontes.corpo,
-    borderRadius: 3,
-    backgroundColor: cores.tintaClara,
-    "& fieldset": { borderColor: cores.bordaEscura },
-    "&:hover fieldset": { borderColor: cores.rosa },
-    "&.Mui-focused fieldset": { borderColor: cores.mostarda, borderWidth: 2 },
-  },
-  "& .MuiInputLabel-root": { color: cores.textoClaro, fontFamily: fontes.corpo },
-  "& .MuiInputLabel-root.Mui-focused": { color: cores.mostarda },
-};
+import { botaoAutenticacao, campoEscuro } from "./estilosAutenticacao";
 
 export function LoginForm() {
   const router = useRouter();
@@ -52,25 +38,7 @@ export function LoginForm() {
       <Button
         type="submit"
         disabled={carregando}
-        sx={{
-          mt: 1,
-          py: 1.4,
-          borderRadius: 3,
-          backgroundColor: cores.mostarda,
-          color: cores.tinta,
-          boxShadow: `4px 4px 0 ${cores.terracota}`,
-          fontFamily: fontes.corpo,
-          fontWeight: 700,
-          fontSize: "1.1rem",
-          textTransform: "none",
-          transition: "transform 0.15s, box-shadow 0.15s",
-          "&:hover": {
-            backgroundColor: cores.mostardaEscura,
-            transform: "translate(-1px, -1px)",
-            boxShadow: `5px 5px 0 ${cores.terracota}`,
-          },
-          "&.Mui-disabled": { backgroundColor: cores.mostarda, color: cores.tinta, opacity: 0.6 },
-        }}
+        sx={botaoAutenticacao}
       >
         {carregando ? "Entrando..." : "Entrar"}
       </Button>

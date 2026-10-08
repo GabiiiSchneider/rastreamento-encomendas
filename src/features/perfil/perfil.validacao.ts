@@ -46,17 +46,29 @@ export function normalizarPerfil(dados: DadosPerfil): DadosPerfil {
   };
 }
 
+export function validarNome(nome: string): string | null {
+  if (nome.length < LIMITES_PERFIL.nomeMin) return `O nome precisa ter pelo menos ${LIMITES_PERFIL.nomeMin} letras.`;
+  if (nome.length > LIMITES_PERFIL.nomeMax) return `O nome pode ter no máximo ${LIMITES_PERFIL.nomeMax} caracteres.`;
+  return null;
+}
+
+export function validarUsername(username: string): string | null {
+  if (/\s/.test(username)) return "O nome de usuário não pode ter espaços.";
+  if (username.length < LIMITES_PERFIL.usernameMin) return `Use pelo menos ${LIMITES_PERFIL.usernameMin} caracteres.`;
+  if (username.length > LIMITES_PERFIL.usernameMax) return `Use no máximo ${LIMITES_PERFIL.usernameMax} caracteres.`;
+  if (!FORMATO_USERNAME.test(username)) return "Use só letras minúsculas, números, ponto e sublinhado.";
+  return null;
+}
+
 export function validarPerfil(dados: DadosPerfil): ErrosPerfil {
   const { nome, username, bio, generoFavorito } = normalizarPerfil(dados);
   const erros: ErrosPerfil = {};
 
-  if (nome.length < LIMITES_PERFIL.nomeMin) erros.nome = `O nome precisa ter pelo menos ${LIMITES_PERFIL.nomeMin} letras.`;
-  else if (nome.length > LIMITES_PERFIL.nomeMax) erros.nome = `O nome pode ter no máximo ${LIMITES_PERFIL.nomeMax} caracteres.`;
+  const erroNome = validarNome(nome);
+  if (erroNome) erros.nome = erroNome;
 
-  if (/\s/.test(username)) erros.username = "O nome de usuário não pode ter espaços.";
-  else if (username.length < LIMITES_PERFIL.usernameMin) erros.username = `Use pelo menos ${LIMITES_PERFIL.usernameMin} caracteres.`;
-  else if (username.length > LIMITES_PERFIL.usernameMax) erros.username = `Use no máximo ${LIMITES_PERFIL.usernameMax} caracteres.`;
-  else if (!FORMATO_USERNAME.test(username)) erros.username = "Use só letras minúsculas, números, ponto e sublinhado.";
+  const erroUsername = validarUsername(username);
+  if (erroUsername) erros.username = erroUsername;
 
   if (bio.length > LIMITES_PERFIL.bioMax) erros.bio = `A bio pode ter no máximo ${LIMITES_PERFIL.bioMax} caracteres.`;
   if (generoFavorito.length > LIMITES_PERFIL.generoMax) erros.generoFavorito = `Use no máximo ${LIMITES_PERFIL.generoMax} caracteres.`;

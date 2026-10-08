@@ -1,10 +1,15 @@
 import { Box, Stack, Typography, Chip } from "@mui/material";
+import { useSearch } from "@tanstack/react-router";
+import { LinkRouter } from "../../../components/LinkRouter";
+import { linkTrocarTela, textoTrocarTela } from "../../user/components/estilosAutenticacao";
 import { cores, fontes } from "../../../lib/tema";
 import { LoginForm } from "../../user/components/LoginForm";
 
 const destaques = ["Resenhas", "Leituras", "Leitores"];
 
 export function LoginBoasVindas() {
+  const { redirect } = useSearch({ from: "/login" });
+
   return (
     <Stack sx={{ color: cores.papel, pl: { md: 2 } }}>
       <Typography sx={{ fontFamily: fontes.titulo, fontStyle: "italic", fontSize: 22, color: cores.rosa }}>
@@ -24,6 +29,13 @@ export function LoginBoasVindas() {
         </Typography>
 
         <LoginForm />
+
+        <Typography sx={textoTrocarTela}>
+          Ainda não tem conta?{" "}
+          <LinkRouter to="/cadastro" search={{ redirect }} underline="hover" sx={linkTrocarTela}>
+            Cadastre-se
+          </LinkRouter>
+        </Typography>
 
         <Stack direction="row" spacing={1}>
           {destaques.map((item) => (
