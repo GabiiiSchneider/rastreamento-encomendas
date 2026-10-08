@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter, useSearch } from "@tanstack/react-router";
 import { Box, TextField, Button, Alert } from "@mui/material";
 import { loginUsuario } from "../auth.functions";
 import { cores, fontes } from "../../../lib/tema";
@@ -19,7 +19,8 @@ const campoEscuro = {
 };
 
 export function LoginForm() {
-  const navigate = useNavigate();
+  const router = useRouter();
+  const { redirect } = useSearch({ from: "/login" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
@@ -32,7 +33,8 @@ export function LoginForm() {
 
     try {
       await loginUsuario({ data: { email, password } });
-      navigate({ to: "/home" });
+      await router.invalidate();
+      await router.navigate({ href: redirect ?? "/home" });
     } catch (error) {
       setErro((error as Error).message);
     } finally {

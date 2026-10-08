@@ -1,16 +1,16 @@
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { Box, Stack, Typography } from "@mui/material";
-import { PaginaComCard } from "../../components/PaginaComCard";
-import { BotaoRetro } from "../../components/BotaoRetro";
-import { cores, fontes } from "../../lib/tema";
-import type { AutorCatalogo, LivroCatalogo } from "../../catalogo/catalogo.port";
-import { listarLivrosDoAutor, obterAutor } from "../../features/autores/autores.functions";
-import { BiografiaAutor, DatasAutor, FotoAutor } from "../../features/autores/components/InfoAutor";
-import { useListaPaginada } from "../../features/livros/useListaPaginada";
-import { CartaoLivroBusca } from "../../features/livros/components/CartaoLivroBusca";
-import { GradeCarregando, gradeLivros } from "../../features/livros/components/GradeLivros";
-import { PaginacaoResponsiva } from "../../features/livros/components/PaginacaoResponsiva";
-import { MensagemEstado } from "../../features/livros/components/MensagemEstado";
+import { PaginaComCard } from "../../../components/PaginaComCard";
+import { BotaoRetro } from "../../../components/BotaoRetro";
+import { cores, fontes } from "../../../lib/tema";
+import type { AutorCatalogo, LivroCatalogo } from "../../../catalogo/catalogo.port";
+import { listarLivrosDoAutor, obterAutor } from "../../../features/autores/autores.functions";
+import { BiografiaAutor, DatasAutor, FotoAutor } from "../../../features/autores/components/InfoAutor";
+import { useListaPaginada } from "../../../features/livros/useListaPaginada";
+import { CartaoLivroBusca } from "../../../features/livros/components/CartaoLivroBusca";
+import { GradeCarregando, gradeLivros } from "../../../features/livros/components/GradeLivros";
+import { PaginacaoResponsiva } from "../../../features/livros/components/PaginacaoResponsiva";
+import { MensagemEstado } from "../../../features/livros/components/MensagemEstado";
 
 type BuscaAutor = { pagina?: number };
 
@@ -19,7 +19,7 @@ function validarBuscaAutor(search: Record<string, unknown>): BuscaAutor {
   return { pagina: Number.isInteger(pagina) && pagina > 1 ? pagina : undefined };
 }
 
-export const Route = createFileRoute("/autores/$autorId")({
+export const Route = createFileRoute("/_autenticado/autores/$autorId")({
   validateSearch: validarBuscaAutor,
   loader: async ({ params }) => {
     const autor = await obterAutor({ data: { autorId: params.autorId } });

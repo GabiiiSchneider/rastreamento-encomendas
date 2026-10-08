@@ -1,22 +1,22 @@
 import { useState } from "react";
 import { createFileRoute, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import { Box, Chip, Link, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import { PaginaComCard } from "../../components/PaginaComCard";
-import { BotaoRetro } from "../../components/BotaoRetro";
-import { LinkRouter } from "../../components/LinkRouter";
-import { AvisoRetro, type Aviso } from "../../components/AvisoRetro";
-import { cores, fontes, retro } from "../../lib/tema";
-import type { ReadingStatus } from "../../generated/prisma/enums";
-import type { DetalhesLivroCatalogo } from "../../catalogo/catalogo.port";
-import { adicionarNaEstante, obterLivro, obterStatusNaEstante } from "../../features/livros/livros.functions";
-import { validarBuscaLivro, type BuscaLivro } from "../../features/livros/livros.busca";
-import { paraExternalId } from "../../features/livros/livros.ids";
-import { OPCOES_STATUS, rotuloDoStatus } from "../../features/livros/livros.status";
-import { estiloDoLivro, indiceDoId } from "../../features/livros/components/estilosCapa";
-import { MensagemEstado } from "../../features/livros/components/MensagemEstado";
-import { ID_SECAO_AUTOR, SobreAutor } from "../../features/autores/components/SobreAutor";
+import { PaginaComCard } from "../../../components/PaginaComCard";
+import { BotaoRetro } from "../../../components/BotaoRetro";
+import { LinkRouter } from "../../../components/LinkRouter";
+import { AvisoRetro, type Aviso } from "../../../components/AvisoRetro";
+import { cores, fontes, retro } from "../../../lib/tema";
+import type { ReadingStatus } from "../../../generated/prisma/enums";
+import type { DetalhesLivroCatalogo } from "../../../catalogo/catalogo.port";
+import { adicionarNaEstante, obterLivro, obterStatusNaEstante } from "../../../features/livros/livros.functions";
+import { validarBuscaLivro, type BuscaLivro } from "../../../features/livros/livros.busca";
+import { paraExternalId } from "../../../features/livros/livros.ids";
+import { OPCOES_STATUS, rotuloDoStatus } from "../../../features/livros/livros.status";
+import { estiloDoLivro, indiceDoId } from "../../../features/livros/components/estilosCapa";
+import { MensagemEstado } from "../../../features/livros/components/MensagemEstado";
+import { ID_SECAO_AUTOR, SobreAutor } from "../../../features/autores/components/SobreAutor";
 
-export const Route = createFileRoute("/livros/$livroId")({
+export const Route = createFileRoute("/_autenticado/livros/$livroId")({
   validateSearch: validarBuscaLivro,
   loader: async ({ params }) => {
     const [livro, statusAtual] = await Promise.all([
@@ -232,6 +232,13 @@ function VoltarParaBusca({ busca }: { busca: BuscaLivro }) {
     return (
       <LinkRouter to="/autores/$autorId" params={{ autorId: busca.autor }} underline="hover" sx={estilo}>
         ← Voltar para o autor
+      </LinkRouter>
+    );
+  }
+  if (busca.de === "pesquisa") {
+    return (
+      <LinkRouter to="/buscar" search={{ q: busca.q }} underline="hover" sx={estilo}>
+        ← Voltar para a pesquisa
       </LinkRouter>
     );
   }

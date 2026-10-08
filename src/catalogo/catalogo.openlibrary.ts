@@ -1,7 +1,10 @@
-import type { AutorCatalogo, DetalhesLivroCatalogo, LivroCatalogo, ProvedorCatalogo } from './catalogo.port.ts'
+import type { AutorCatalogo, AutorResumoCatalogo, DetalhesLivroCatalogo, LivroCatalogo, ProvedorCatalogo } from './catalogo.port.ts'
 
 const URL_BASE = 'https://openlibrary.org'
 const URL_BUSCA = `${URL_BASE}/search.json`
+const URL_BUSCA_AUTORES = `${URL_BASE}/search/authors.json`
+const URL_EM_ALTA = `${URL_BASE}/trending/daily.json`
+const URL_FOTO_AUTOR_OLID = 'https://covers.openlibrary.org/a/olid'
 const URL_CAPA = 'https://covers.openlibrary.org/b/id'
 const URL_FOTO_AUTOR = 'https://covers.openlibrary.org/a/id'
 const CAMPOS = 'key,title,author_name,author_key,first_publish_year,cover_i,subject,editions,editions.title,editions.language'
@@ -10,6 +13,9 @@ const LIVROS_POR_PAGINA = 12
 const LIMITE_MAXIMO = 50
 // obras com mais autores que isso são coletâneas (ex.: "Great Short Stories of the World", com 70)
 const MAXIMO_AUTORES_OBRA = 5
+const AUTORES_POR_PAGINA = 12
+const LIMITE_EM_ALTA = 20
+const CACHE_EM_ALTA_MS = 30 * 60 * 1000
 const LIMITE_ASSUNTOS = 8
 const TEMPO_LIMITE_MS = 8000
 const FORMATO_ID_OBRA = /^\/works\/OL\d+W$/
@@ -34,6 +40,24 @@ type DocOpenLibrary = {
 type RespostaBusca = {
   numFound?: number
   docs?: DocOpenLibrary[]
+}
+
+type AutorBuscaOpenLibrary = {
+  key?: string
+  name?: string
+  birth_date?: string
+  death_date?: string
+  top_work?: string
+  work_count?: number
+}
+
+type RespostaBuscaAutores = {
+  numFound?: number
+  docs?: AutorBuscaOpenLibrary[]
+}
+
+type RespostaEmAlta = {
+  works?: DocOpenLibrary[]
 }
 
 type ObraOpenLibrary = {
@@ -207,8 +231,8 @@ function formatarData(data?: string): string | null {
   const mesDiaAno = texto.match(/^([A-Za-z]+) (\d{1,2}),? (\d{3,4})$/)
   const mesAno = texto.match(/^([A-Za-z]+),? (\d{3,4})$/)
 
-  if (diaMesAno && MESES[diaMesAno[2].toLowerCase()]) return `${diaMesAno[1]} de ${MESES[diaMesAno[2].toLowerCase()]} de ${diaMesAno[3]}`
-  if (mesDiaAno && MESES[mesDiaAno[1].toLowerCase()]) return `${mesDiaAno[2]} de ${MESES[mesDiaAno[1].toLowerCase()]} de ${mesDiaAno[3]}`
+  if (diaMesAno && MESES[diaMesAno[2].toLowerCase()]) return `${Number(diaMesAno[1])} de ${MESES[diaMesAno[2].toLowerCase()]} de ${diaMesAno[3]}`
+  if (mesDiaAno && MESES[mesDiaAno[1].toLowerCase()]) return `${Number(mesDiaAno[2])} de ${MESES[mesDiaAno[1].toLowerCase()]} de ${mesDiaAno[3]}`
   if (mesAno && MESES[mesAno[1].toLowerCase()]) return `${MESES[mesAno[1].toLowerCase()]} de ${mesAno[2]}`
   return texto
 }
@@ -232,6 +256,32 @@ function semTitulosRepetidos(livros: LivroCatalogo[]) {
     return true
   })
 }
+
+function decodificarEntidades(texto: string) {
+  return texto
+    .replace(/&#(\d+);/g, (_, codigo: string) => String.fromCodePoint(Number(codigo)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, codigo: string) => String.fromCodePoint(parseInt(codigo, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+}
+
+function paraAutorResumo(doc: AutorBuscaOpenLibrary): AutorResumoCatalogo | null {
+  if (!doc.key || !doc.name || !FORMATO_ID_AUTOR.test(doc.key)) return null
+  return {
+    id: doc.key,
+    nome: decodificarEntidades(doc.name),
+    fotoUrl: `${URL_FOTO_AUTOR_OLID}/${doc.key}-M.jpg?default=false`,
+    nascimento: formatarData(doc.birth_date),
+    morte: formatarData(doc.death_date),
+    obraMaisConhecida: doc.top_work ? decodificarEntidades(doc.top_work) : null,
+    totalObras: doc.work_count ?? 0,
+  }
+}
+
+let cacheEmAlta: { livros: LivroCatalogo[]; expiraEm: number } | null = null
 
 async function obterAutorJson(autorId: string) {
   const autor = await obterJson<AutorOpenLibrary>(`${URL_BASE}/authors/${autorId}.json`)
@@ -317,5 +367,45 @@ export const provedorCatalogoOpenLibrary: ProvedorCatalogo = {
       semColetaneas: true,
     })
     return { livros: semTitulosRepetidos(livros), total, pagina: paginaValida, porPagina: limiteValido }
+  },
+
+  async buscarAutores(termo, pagina = 1, limite = AUTORES_POR_PAGINA) {
+    const busca = termo.trim()
+    const paginaValida = Math.max(1, Math.floor(pagina))
+    const limiteValido = Math.min(LIMITE_MAXIMO, Math.max(1, Math.floor(limite)))
+    if (!busca) return { autores: [], total: 0, pagina: paginaValida, porPagina: limiteValido }
+
+    const parametros = new URLSearchParams({
+      q: busca,
+      fields: 'key,name,birth_date,death_date,top_work,work_count',
+      sort: 'work_count desc',
+      limit: String(limiteValido),
+      offset: String((paginaValida - 1) * limiteValido),
+    })
+    const dados = await obterJson<RespostaBuscaAutores>(`${URL_BUSCA_AUTORES}?${parametros}`)
+    return {
+      autores: (dados?.docs ?? []).map(paraAutorResumo).filter((autor) => autor !== null),
+      total: dados?.numFound ?? 0,
+      pagina: paginaValida,
+      porPagina: limiteValido,
+    }
+  },
+
+  async buscarEmAlta(limite = 6) {
+    const quantidade = Math.min(LIMITE_EM_ALTA, Math.max(1, Math.floor(limite)))
+    if (cacheEmAlta && cacheEmAlta.expiraEm > Date.now()) return cacheEmAlta.livros.slice(0, quantidade)
+
+    try {
+      const dados = await obterJson<RespostaEmAlta>(`${URL_EM_ALTA}?limit=${LIMITE_EM_ALTA}`)
+      const livros = (dados?.works ?? [])
+        .filter((doc) => FORMATO_ID_OBRA.test(doc.key))
+        .map((doc) => paraLivroCatalogo(doc))
+        .filter((livro) => livro !== null)
+      cacheEmAlta = { livros, expiraEm: Date.now() + CACHE_EM_ALTA_MS }
+      return livros.slice(0, quantidade)
+    } catch (erro) {
+      if (cacheEmAlta) return cacheEmAlta.livros.slice(0, quantidade)
+      throw erro
+    }
   },
 }

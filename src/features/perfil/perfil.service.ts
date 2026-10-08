@@ -1,5 +1,5 @@
 import type { PerfilRepository } from "./perfil.repository";
-import type { PerfilUsuario, ResultadoAvatar, ResultadoEdicao, ResumoUsuario } from "./perfil.types";
+import type { PerfilPublico, PerfilUsuario, ResultadoAvatar, ResultadoEdicao } from "./perfil.types";
 import { FORMATO_AVATAR, TAMANHO_MAXIMO_AVATAR, normalizarPerfil, validarPerfil, type DadosPerfil } from "./perfil.validacao";
 import { periodoDoMes } from "../livros/livros.estante";
 
@@ -25,13 +25,16 @@ export class PerfilService {
     const esteMes = periodoDoMes(hoje);
     const esteAno = { inicio: new Date(ano, 0, 1), fim: new Date(ano + 1, 0, 1) };
 
-    const [lidosNoMes, totalLidos, queroLer, lendo, lidosNoAno, meta] = await Promise.all([
+    const [lidosNoMes, totalLidos, queroLer, lendo, lidosNoAno, meta, seguidores, seguindo, resenhas] = await Promise.all([
       this.repository.countUserBooks(userId, "READ", esteMes),
       this.repository.countUserBooks(userId, "READ"),
       this.repository.countUserBooks(userId, "WANT_TO_READ"),
       this.repository.countUserBooks(userId, "READING"),
       this.repository.countUserBooks(userId, "READ", esteAno),
       this.repository.findGoal(userId, ano),
+      this.repository.countFollowers(userId),
+      this.repository.countFollowing(userId),
+      this.repository.countReviews(userId),
     ]);
 
     return {
@@ -41,14 +44,21 @@ export class PerfilService {
       generoFavorito: usuario.profile?.favorite_genre ?? null,
       avatarUrl: usuario.profile?.avatar_url ?? null,
       estatisticas: { lidosNoMes, totalLidos, queroLer, lendo },
+      social: { seguidores, seguindo, resenhas },
       meta: meta ? { ano, objetivo: meta.target, lidos: lidosNoAno } : null,
     };
   }
 
-  async obterResumo(userId: string): Promise<ResumoUsuario | null> {
-    const usuario = await this.repository.findUserWithProfile(userId);
-    if (!usuario) return null;
-    return { nome: usuario.name, avatarUrl: usuario.profile?.avatar_url ?? null };
+  async obterPerfilPublico(viewerId: string, username: string): Promise<PerfilPublico | null> {
+    const dono = await this.repository.findProfileByUsername(username.trim().toLowerCase());
+    if (!dono) return null;
+
+    const [perfil, euSigo] = await Promise.all([
+      this.obterPerfil(dono.user_id),
+      this.repository.isFollowing(viewerId, dono.user_id),
+    ]);
+    if (!perfil?.usuario) return null;
+    return { ...perfil, id: dono.user_id, usuario: perfil.usuario, euSigo };
   }
 
   async editarPerfil(userId: string, dados: DadosPerfil): Promise<ResultadoEdicao> {

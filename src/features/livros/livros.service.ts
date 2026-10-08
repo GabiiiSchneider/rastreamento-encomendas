@@ -41,6 +41,10 @@ export class LivrosService {
     return this.catalogo.buscarLivros(termo, pagina, idioma);
   }
 
+  listarEmAlta(limite?: number) {
+    return this.catalogo.buscarEmAlta(limite);
+  }
+
   async obterDetalhes(externalId: string, idioma?: string) {
     const detalhes = await this.catalogo.buscarDetalhes(externalId, idioma);
     if (!detalhes || !idioma) return detalhes;
@@ -93,7 +97,7 @@ export class LivrosService {
     return { livros: itens.map(paraLivroNaEstante), total, pagina: paginaValida, porPagina: LIVROS_POR_PAGINA_ESTANTE };
   }
 
-  private async obterOuSalvarLivro(externalId: string, idioma?: string) {
+  async obterOuSalvarLivro(externalId: string, idioma?: string) {
     const existente = await this.repository.findBookByExternalId(externalId);
     if (existente) return existente;
 

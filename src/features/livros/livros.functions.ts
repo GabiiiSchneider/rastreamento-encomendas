@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { livrosService } from "./livros.compose";
-import { obterUsuarioAtualId } from "../user/usuario-atual";
+import { comUsuario, exigirUsuario } from "../../lib/autenticacao";
 import { obterIdiomaDoNavegador } from "../../traducao/idioma";
 import { livroIdValido, paraExternalId } from "./livros.ids";
 import { abaValida } from "./livros.estante";
@@ -27,35 +27,39 @@ export const obterLivro = createServerFn({ method: "GET" })
   });
 
 export const adicionarNaEstante = createServerFn({ method: "POST" })
+  .middleware([exigirUsuario])
   .validator((data: AdicionarNaEstanteDto) => data)
-  .handler(async ({ data }) => {
-    const userId = await obterUsuarioAtualId();
-    if (!userId) {
-      throw new Error("Usuário não encontrado");
-    }
-    await livrosService.adicionarNaEstante(userId, data.externalId, data.status, {}, obterIdiomaDoNavegador());
+  .handler(async ({ data, context }) => {
+    await livrosService.adicionarNaEstante(context.userId, data.externalId, data.status, {}, obterIdiomaDoNavegador());
   });
 
 export const obterStatusNaEstante = createServerFn({ method: "GET" })
+  .middleware([comUsuario])
   .validator((data: ObterStatusNaEstanteDto) => data)
-  .handler(async ({ data }) => {
-    const userId = await obterUsuarioAtualId();
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
     if (!userId) return null;
     return livrosService.obterStatusNaEstante(userId, data.externalId);
   });
 
 export const listarMinhaEstante = createServerFn({ method: "GET" })
+  .middleware([comUsuario])
   .validator((data: ListarEstanteDto) => data)
-  .handler(async ({ data }) => {
-    const userId = await obterUsuarioAtualId();
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
     if (!userId) return [];
     return livrosService.listarEstante(userId, data.status);
   });
 
 export const listarEstantePaginada = createServerFn({ method: "GET" })
+  .middleware([comUsuario])
   .validator((data: ListarEstantePaginadaDto) => data)
-  .handler(async ({ data }) => {
-    const userId = await obterUsuarioAtualId();
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
     if (!userId || !abaValida(data.aba)) return { livros: [], total: 0, pagina: 1, porPagina: 12 };
     return livrosService.listarEstantePaginada(userId, data.aba, data.pagina);
   });
+
+export const listarLivrosEmAlta = createServerFn({ method: "GET" }).handler(async () => {
+  return livrosService.listarEmAlta(6);
+});

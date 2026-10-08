@@ -6,6 +6,23 @@ export class ObterAutorDto {
   autorId: string;
 }
 
+export class BuscarAutoresDto {
+  @IsString()
+  @IsNotEmpty()
+  termo: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  pagina?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limite?: number;
+}
+
 export class ListarLivrosDoAutorDto {
   @IsString()
   @IsNotEmpty()
